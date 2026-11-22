@@ -1,0 +1,351 @@
+@import 'tailwindcss';
+
+/* Campus Food design tokens. Themes swap these variables on <html data-theme="...">,
+   so every page follows without per-page code (the COMPLIANCE365 approach). */
+@theme {
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Anton', 'Impact', ui-sans-serif, sans-serif;
+  --font-script: 'Pacifico', cursive;
+  --font-hand: 'Caveat', 'Comic Sans MS', cursive;
+
+  /* Midnight (default): deep navy with antique gold on warm ivory. */
+  --color-canvas: #ffffff;
+  --color-cream: #f6f3ec;
+  --color-ink: #1a1d24;
+  --color-muted: #646872;
+  --color-line: #e3ded3;
+  --color-brand: #1f3b5c;
+  --color-brand-strong: #142a45;
+  --color-gold: #c29b40;
+  --color-sun: #efe4c6;
+  --color-leaf: #2e4a3f;
+  --color-leaf-ink: #fff8ea;
+  --color-danger: #c0262d;
+  --color-ok: #1f7a45;
+}
+
+html[data-theme='garden'] {
+  /* Emerald: deep emerald with soft gold. */
+  --color-canvas: #ffffff;
+  --color-cream: #eef4f1;
+  --color-line: #d6e3dd;
+  --color-brand: #0f5c4d;
+  --color-brand-strong: #0a4338;
+  --color-gold: #c29b40;
+  --color-sun: #efe4c6;
+  --color-leaf: #1f3b5c;
+}
+html[data-theme='berry'] {
+  --color-canvas: #ffffff;
+  --color-cream: #ffe9e6;
+  --color-line: #f3d3cd;
+  --color-brand: #d7263d;
+  --color-brand-strong: #a3172b;
+  --color-gold: #ffb627;
+  --color-sun: #ffe3a3;
+  --color-leaf: #0f5f4a;
+}
+html[data-theme='ocean'] {
+  --color-canvas: #ffffff;
+  --color-cream: #e3f3f8;
+  --color-line: #cbe4ec;
+  --color-brand: #0b7a99;
+  --color-brand-strong: #075d75;
+  --color-gold: #f7b538;
+  --color-sun: #ffe5a8;
+  --color-leaf: #e8590c;
+}
+html[data-theme='night'] {
+  color-scheme: dark;
+  --color-canvas: #15120f;
+  --color-cream: #211b16;
+  --color-ink: #f6eee6;
+  --color-muted: #b3a79c;
+  --color-line: #3a3029;
+  --color-brand: #ff8a3d;
+  --color-brand-strong: #ffa766;
+  --color-gold: #f5c33b;
+  --color-sun: #5a4512;
+  --color-leaf: #173f26;
+  --color-danger: #ff7a7f;
+  --color-ok: #6fd39a;
+}
+
+html {
+  --page-backdrop: var(--color-canvas);
+  background-color: var(--color-canvas);
+  color-scheme: light;
+  font-size: 14px; /* small Nunito throughout */
+  scroll-behavior: smooth;
+}
+html[data-theme='night'] { color-scheme: dark; }
+/* Phones read at 16px (also stops iOS zooming into form fields); larger screens keep the compact 14px. */
+@media (max-width: 639px) { html { font-size: 13px; } }
+
+/* Flat, bright canvas (as in COMPLIANCE365): one solid colour, no blended colour fields. */
+body {
+  background: var(--page-backdrop);
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* No shadows anywhere: depth comes from translucency and blur, never from drop shadows. */
+* { box-shadow: none !important; }
+
+::selection { background: var(--color-gold); color: #1c1917; }
+
+@layer components {
+/* Condensed headlines, kept small: the type carries style, not size. */
+.headline {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  line-height: 1.02;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+/* The home page body must be opaque above the revealing footer, so it repeats the backdrop. */
+.page-backdrop { background: var(--page-backdrop); background-attachment: fixed; }
+
+/* Glass surfaces: a clear, near-solid canvas with a light blur and a hairline edge. No colour
+   blending, no shadow. Used for the navbar, dropdowns and the search field only. */
+.glass {
+  background: color-mix(in srgb, var(--color-canvas) 94%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+}
+/* Solid colour bands (green signature list, offers, reviews): flat fill, no gradient. */
+.glass-tint { background: var(--glass-tint, var(--color-leaf)); }
+.glass-line { border-color: color-mix(in srgb, var(--color-ink) 12%, transparent); }
+
+/* Hand-written notes that sit beside drawings. */
+.hand { font-family: var(--font-hand); }
+
+/* Pill button with an inked base line (the design's "offset" button, without a shadow). */
+/* Buttons in the style of the reference: softly squared, sentence case, one solid and one soft grey. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.55rem;
+  padding: 0.55rem 1.05rem;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0;
+  background: var(--color-brand);
+  color: #fff;
+  border: 1px solid transparent;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.btn:hover { background: var(--color-brand-strong); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ghost {
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  color: var(--color-ink);
+}
+.btn-ghost:hover { background: color-mix(in srgb, var(--color-ink) 11%, transparent); }
+.btn-light { background: #ffffff; color: #1c1917; }
+.btn-light:hover { background: #f4f4f4; }
+.btn-lg { padding: 0.8rem 1.5rem; font-size: 0.95rem; }
+
+/* Highlighter stroke behind key words, drawn in after the line appears. */
+.marker { position: relative; z-index: 0; white-space: nowrap; }
+.marker::before {
+  content: '';
+  position: absolute;
+  left: -0.12em;
+  right: -0.1em;
+  top: 0.3em;
+  bottom: 0.02em;
+  z-index: -1;
+  background: color-mix(in srgb, var(--color-brand) 32%, transparent);
+  border-radius: 0.3em 0.55em 0.35em 0.6em;
+  transform-origin: left center;
+  transform: skewX(-6deg) rotate(-1.5deg) scaleX(0);
+  animation: marker-in 900ms cubic-bezier(0.5, 0, 0.2, 1) 500ms forwards;
+}
+@keyframes marker-in { to { transform: skewX(-6deg) rotate(-1.5deg) scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .marker::before { animation: none; transform: skewX(-6deg) rotate(-1.5deg); } }
+
+.link { color: var(--color-brand); text-underline-offset: 4px; }
+.link:hover { text-decoration: underline; }
+
+/* Flat inputs: one bottom line, no box (forms are never in containers). */
+.field {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 160ms ease;
+  color: var(--color-ink);
+}
+.field:focus { border-color: var(--color-brand); }
+.field::placeholder { color: color-mix(in srgb, var(--color-muted) 70%, transparent); }
+.field[aria-invalid='true'] { border-color: var(--color-danger); }
+select.field { cursor: pointer; }
+select.field option { color: #1c1917; }
+
+/* Scalloped edges (the awning look of the hero and trust sections): a row of half-circles in the
+   neighbouring section's colour, set with --scallop on the element. */
+.scallop-up, .scallop-down {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22px;
+  pointer-events: none;
+}
+.scallop-up { bottom: -1px; background: radial-gradient(circle at 50% 100%, var(--scallop) 21px, transparent 22px) center bottom / 44px 22px repeat-x; }
+.scallop-down { top: -1px; background: radial-gradient(circle at 50% 0, var(--scallop) 21px, transparent 22px) center top / 44px 22px repeat-x; }
+
+/* Flower-shaped badge and portrait frame. */
+.flower {
+  clip-path: polygon(50% 0%, 61% 8%, 75% 5%, 81% 18%, 95% 25%, 92% 39%, 100% 50%, 92% 61%, 95% 75%, 81% 82%, 75% 95%, 61% 92%, 50% 100%, 39% 92%, 25% 95%, 19% 82%, 5% 75%, 8% 61%, 0% 50%, 8% 39%, 5% 25%, 19% 18%, 25% 5%, 39% 8%);
+}
+.cloud {
+  clip-path: path('M50 3c9 0 14 6 18 11 7-3 15-1 19 6 4 6 3 12 1 16 6 4 9 10 8 17-1 8-7 13-13 14 1 7-3 14-9 17-7 3-14 2-18-2-4 6-11 9-18 7-8-2-12-8-13-14-7 0-13-4-15-11-2-6 0-13 5-17-4-5-5-12-1-18 4-7 12-9 19-7 2-7 9-12 18-12Z');
+}
+
+.arch { border-radius: 999px 999px 1.25rem 1.25rem; }
+.soft { border-radius: 1.75rem; }
+}
+
+/* Hero: menu items pop out of the centre and spread to their places, four at a time. */
+@keyframes pop-spread {
+  0% { opacity: 0; transform: translate(var(--from-x, 0), var(--from-y, 0)) scale(0.2) rotate(-25deg); }
+  60% { opacity: 1; transform: translate(0, 0) scale(1.08) rotate(var(--tilt, 0deg)); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(var(--tilt, 0deg)); }
+}
+@keyframes bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+.pop-spread {
+  animation: pop-spread 900ms cubic-bezier(0.2, 0.9, 0.25, 1.15) both, bob 5s ease-in-out 900ms infinite;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(0.5em); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.rise { animation: rise 800ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* Drawings: line art draws itself (elements carry pathLength="1"). */
+@keyframes stroke-draw { to { stroke-dashoffset: 0; } }
+.draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: stroke-draw 1400ms cubic-bezier(0.45, 0, 0.2, 1) forwards;
+}
+@keyframes steam {
+  0% { opacity: 0; transform: translateY(6px); }
+  40% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+.steam { animation: steam 2.4s ease-in-out infinite; }
+
+/* Marquee bands (footer categories, slides). */
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee { animation: marquee var(--marquee-speed, 38s) linear infinite; width: max-content; }
+.marquee:hover { animation-play-state: paused; }
+
+/* Slides section: tilted photographs. */
+.tilt-left { transform: rotate(-7deg); }
+.tilt-right { transform: rotate(6deg); }
+
+/* Menus slide in but never start invisible, so they show even if animations are paused. */
+@keyframes drop-in { from { transform: translateY(-6px); } to { transform: none; } }
+.drop-in { animation: drop-in 160ms ease-out; }
+/* Home hero phone (big screens): turned so its left side shows; the stacked shadows on the left are the frame's
+   thickness, the soft one below is its shadow on the page. */
+.hero-phone-body {
+  /* perspective() on the element itself: a perspective on the parent made Chrome drop the phone behind the
+     hero's blurred backdrop layers. */
+  transform: perspective(1400px) rotateY(24deg) rotateZ(-2deg);
+  transform-origin: right center;
+  box-shadow:
+    -1px 0 0 #2a2a2a, -2px 0 0 #2a2a2a, -3px 0 0 #333, -4px 1px 0 #3a3a3a, -5px 1px 0 #444, -6px 1px 0 #4a4a4a,
+    -7px 2px 0 #3a3a3a, -8px 2px 0 #2b2b2b, 0 0 0 1px #000,
+    -30px 40px 60px -10px color-mix(in srgb, var(--color-ink) 45%, transparent);
+  animation: hero-phone-in 1.2s 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes hero-phone-in { from { opacity: 0; transform: perspective(1400px) rotateY(40deg) rotateZ(-2deg) translateX(-30px); } }
+@media (prefers-reduced-motion: reduce) { .hero-phone-body { animation: none; } }
+
+/* Call us: the handset shakes while the call rings. */
+@keyframes ring-shake { 0%, 50%, 100% { transform: rotate(0); } 5%, 15%, 25%, 35% { transform: rotate(-14deg); } 10%, 20%, 30%, 40% { transform: rotate(14deg); } }
+.ring-shake { animation: ring-shake 1.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ring-shake { animation: none; } }
+
+@keyframes ping-dot { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.4); opacity: 0; } }
+.ping-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: currentColor;
+  animation: ping-dot 1.4s ease-out infinite;
+}
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pop-spread, .rise, .draw, .steam, .marquee, .ping-dot::after { animation: none !important; opacity: 1; transform: none; filter: none; }
+  .draw { stroke-dasharray: none; stroke-dashoffset: 0; }
+  html { scroll-behavior: auto; }
+}
+
+/* Receipt slip: thermal paper with torn zigzag top and bottom edges. */
+.thermal { position: relative; font-family: 'Courier New', Courier, ui-monospace, monospace; }
+.thermal::before, .thermal::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 8px;
+  background: linear-gradient(-45deg, transparent 4px, #fff 0) 0 0 / 8px 8px repeat-x, linear-gradient(45deg, transparent 4px, #fff 0) 0 0 / 8px 8px repeat-x;
+}
+.thermal::before { top: -8px; transform: rotate(180deg); }
+.thermal::after { bottom: -8px; }
+@media print { .thermal::before, .thermal::after { display: none; } .thermal header { display: block !important; } }
+
+@media print {
+  header, footer, .no-print { display: none !important; }
+  html, body { background: #fff; }
+}
+
+/* Home hero background photo: settles from a slight zoom. */
+@keyframes hero-photo-in { from { transform: scale(1.08); } to { transform: scale(1); } }
+.hero-photo { animation: hero-photo-in 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .hero-photo { animation: none; } }
+
+/* Full-screen menu panel: the active theme's colour, links in italic Itim. */
+.menu-font { font-family: 'Itim', var(--font-hand); font-style: italic; font-weight: 400; }
+
+/* Hand-drawn strokes wait undrawn until they scroll into view, then draw in (see components/Stroke.tsx). */
+.stroke-wait { stroke-dasharray: 1; stroke-dashoffset: 1; }
+@media (prefers-reduced-motion: reduce) { .stroke-wait { stroke-dasharray: none; stroke-dashoffset: 0; } }
+
+/* The thin action bar under the navbar: quiet outline actions ("+ Dish"), never big coloured buttons. */
+.header-slot .btn {
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  box-shadow: none;
+}
+.header-slot .btn:hover { background: transparent; color: var(--color-brand); border-color: var(--color-brand); }
+
+/* Phones: descriptive sentences stay off the small screen; the facts, figures and actions remain. */
+@media (max-width: 639px) {
+  .story { display: none !important; }
+  .headline { font-size: 1.35rem !important; }
+  h1.hand, .hand { line-height: 1; }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "campus-food-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Campus Food web app: public site, student ordering, hotel dashboard, rider view and the separate admin portal.",
+  "scripts": {
+    "dev": "vite",
+    "dev:admin": "vite --mode admin",
+    "build": "tsc -b && vite build",
+    "build:admin": "tsc -b && vite build --mode admin",
+    "typecheck": "tsc -b --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@elevenlabs/client": "^1.37.1",
+    "@supabase/supabase-js": "2.119.0",
+    "qrcode": "^1.5.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router-dom": "7.18.5",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.4",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "tailwindcss": "4.3.4",
+    "typescript": "5.9.3",
+    "vite": "8.3.6"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}
