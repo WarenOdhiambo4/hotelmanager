@@ -1,9 +1,10 @@
-import { useEffect, type ReactNode } from 'react'
+import { Fragment, useEffect, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PlateDrawing } from '../../components/Drawings'
 import { FoodImage } from '../../components/FoodImage'
 import { useLoad, usePublicMenu, useSettings, useSiteImages } from '../../lib/data'
 import { dayMonth, kes, shortKes } from '../../lib/format'
+import { linkify, privacyPolicy, termsOfService, type LegalDoc } from '../../lib/legal'
 import { setTitle, whatsappLink } from '../../lib/site'
 import { supabase } from '../../lib/supabase'
 import type { Offer } from '../../lib/types'
@@ -273,16 +274,29 @@ export function Contact() {
 }
 
 /* Legal ------------------------------------------------------------------------------------- */
-function Legal({ title, crumb, updated, sections }: { title: string; crumb: string; updated: string; sections: [string, ReactNode][] }) {
-  useEffect(() => setTitle(title), [title])
+/** Text with its web addresses and email addresses turned into links. */
+function Linked({ text }: { text: string }) {
+  return <>{linkify(text).map((p, i) => p.href
+    ? <a key={i} className="link break-words" href={p.href} {...(p.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{p.text}</a>
+    : <Fragment key={i}>{p.text}</Fragment>)}</>
+}
+
+/** Privacy policy and terms: the same text the build also writes as static HTML for crawlers (lib/legal.ts). */
+function LegalPage({ doc, crumb }: { doc: LegalDoc; crumb: string }) {
+  useEffect(() => setTitle(doc.title, doc.description), [doc.title, doc.description])
   return (
     <>
-      <PageHero title={title} crumb={crumb}>Last updated {updated}</PageHero>
+      <PageHero title={doc.title} crumb={crumb}>Last updated {doc.updated}</PageHero>
       <article className="mx-auto max-w-3xl px-4 py-14 text-sm leading-relaxed sm:px-6">
-        {sections.map(([h, body]) => (
-          <section key={h} className="mt-8 first:mt-0">
-            <h2 className="text-xs font-extrabold uppercase tracking-[0.14em] text-brand">{h}</h2>
-            <div className="mt-2 flex flex-col gap-2 text-ink/90">{body}</div>
+        <p className="text-ink/90"><Linked text={doc.intro} /></p>
+        {doc.sections.map((s) => (
+          <section key={s.heading} className="mt-8">
+            <h2 className="text-xs font-extrabold uppercase tracking-[0.14em] text-brand">{s.heading}</h2>
+            <div className="mt-2 flex flex-col gap-2 text-ink/90">
+              {(s.paragraphs ?? []).map((p) => <p key={p}><Linked text={p} /></p>)}
+              {s.list ? <ul className="list-disc pl-5">{s.list.map((l) => <li key={l}><Linked text={l} /></li>)}</ul> : null}
+              {(s.after ?? []).map((p) => <p key={p}><Linked text={p} /></p>)}
+            </div>
           </section>
         ))}
       </article>
@@ -292,33 +306,12 @@ function Legal({ title, crumb, updated, sections }: { title: string; crumb: stri
 
 export function Privacy() {
   const { data: s } = useSettings()
-  return (
-    <Legal title="Privacy policy" crumb="Privacy" updated="22 November 2026" sections={[
-      ['Who we are', <p key="a">Campus Food runs an ordering platform that connects students, staff and visitors with verified hotels around campus. We handle your information under the Kenya Data Protection Act, 2019.</p>],
-      ['What we collect', <ul key="b" className="list-disc pl-5"><li>Your name, email, M-Pesa phone number and delivery address (hostel, office or room), which you give when you sign up or order.</li><li>Your orders: items, delivery location, status changes and receipts.</li><li>Payment records from M-Pesa: amount, receipt number and result. We never see or store your M-Pesa PIN.</li><li>Feedback you send, and a profile photo if you choose to add one.</li></ul>],
-      ['Why we use it', <ul key="c" className="list-disc pl-5"><li>To place your order with the hotel, take payment and deliver it.</li><li>To send order updates and receipts by SMS, WhatsApp (if you opt in) and email.</li><li>To handle refunds, disputes and support requests.</li><li>To keep accounting records and prevent fraud.</li></ul>],
-      ['Who sees it', <p key="d">The hotel you order from sees your name, phone, delivery location and order. The assigned rider sees what they need to deliver. Our finance and support staff see only what their job needs. Service providers process data for us: Supabase (database and storage), Safaricom M-Pesa (payments), Africa’s Talking (SMS), Meta WhatsApp (optional messages) and Resend (email). We do not sell your data.</p>],
-      ['How long we keep it', <p key="e">Unpaid draft orders are deleted after {Math.round(s.draftLifetimeMinutes / 60)} hours. Paid orders and payment records are kept as long as the law requires for financial records.</p>],
-      ['Your rights', <p key="f">You can ask to see, correct or delete your personal data, or object to how we use it. Change your name, phone, delivery address and message choices under Account. For anything else, contact us{s.supportEmail ? <> at <a className="link" href={`mailto:${s.supportEmail}`}>{s.supportEmail}</a></> : null}.</p>],
-      ['Security', <p key="g">Every record is protected by access rules in the database; staff accounts need two-step sign-in; payment results are accepted only from M-Pesa. We will never ask for your password, PIN or sign-in code.</p>],
-    ]} />
-  )
+  return <LegalPage crumb="Privacy" doc={privacyPolicy(s)} />
 }
 
 export function Terms() {
   const { data: s } = useSettings()
-  return (
-    <Legal title="Terms and conditions" crumb="Terms" updated="22 November 2026" sections={[
-      ['The service', <p key="a">Campus Food lets you order food from verified campus hotels and pay them through M-Pesa. Each hotel prepares its own food and is responsible for it.</p>],
-      ['Prices and fees', <p key="b">Food prices are set by each hotel and confirmed when you place the order. We add a flat platform fee of KES {shortKes(s.platformFee)} per order and a delivery fee for your area. The full breakdown is shown before you pay.</p>],
-      ['Payment', <p key="c">You pay the hotel directly through an M-Pesa prompt. An order counts as paid only when M-Pesa confirms the payment. One order is paid to one hotel.</p>],
-      ['Cancellations and refunds', <p key="d">You may cancel an unpaid order at any time. After paying, you may ask for a refund within {s.refundWindowMinutes} minutes, before the hotel starts preparing. If a hotel rejects your order, you are refunded in full. Approved refunds are reversed to your M-Pesa by the hotel.</p>],
-      ['Delivery', <p key="e">Delivery times are estimates and update as the hotel and rider progress. Please be reachable on the phone number you gave.</p>],
-      ['Your account', <p key="f">Keep your sign-in details private. You must give a working phone number and accurate delivery details. We may suspend accounts used for fraud or abuse.</p>],
-      ['Hotels', <p key="g">Hotels are registered and verified by Campus Food before they can sell. They manage their own menus, prices, photos and availability.</p>],
-      ['Contact', <p key="h">Questions about these terms: {s.supportEmail ? <a className="link" href={`mailto:${s.supportEmail}`}>{s.supportEmail}</a> : <Link to="/contact" className="link">contact us</Link>}.</p>],
-    ]} />
-  )
+  return <LegalPage crumb="Terms" doc={termsOfService(s)} />
 }
 
 /* 404 --------------------------------------------------------------------------------------- */

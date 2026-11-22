@@ -1,5 +1,7 @@
-import { readFileSync } from 'node:fs'
-import { defineConfig, type Plugin } from 'vite'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { legalHtml, privacyPolicy, termsOfService, type LegalSettings } from './src/lib/legal'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -51,6 +53,48 @@ function searchEngines(mode: string): Plugin {
   }
 }
 
+/**
+ * Legal pages as real HTML: Google's OAuth verification (and other crawlers) read /privacy and /terms without running
+ * JavaScript, so the site build writes privacy.html and terms.html: the normal app page with the full text already
+ * inside #root (the app replaces it on start). The fee, refund window and contact come from the live settings at
+ * build time, falling back to the defaults if Supabase cannot be reached.
+ */
+function legalPages(mode: string): Plugin {
+  let outDir = 'dist'
+  return {
+    name: 'campus-legal-pages',
+    apply: 'build',
+    configResolved(c) { outDir = resolve(c.root, c.build.outDir) },
+    async writeBundle() {
+      if (mode === 'admin') return
+      const env = loadEnv(mode, process.cwd(), 'VITE_')
+      const settings: LegalSettings = { supportEmail: null, supportPhone: null, platformFee: 20, refundWindowMinutes: 5, draftLifetimeMinutes: 120 }
+      try {
+        if (env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY) {
+          const res = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/platformSettings?select=supportEmail,supportPhone,platformFee,refundWindowMinutes,draftLifetimeMinutes&limit=1`,
+            { headers: { apikey: env.VITE_SUPABASE_ANON_KEY, Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}` }, signal: AbortSignal.timeout(8000) })
+          const [row] = res.ok ? await res.json() as Partial<LegalSettings>[] : []
+          if (row) Object.assign(settings, { ...row, platformFee: Number(row.platformFee ?? settings.platformFee) })
+        }
+      } catch { /* offline build: keep the defaults */ }
+      const shell = readFileSync(resolve(outDir, 'index.html'), 'utf8')
+      for (const [file, path, doc] of [['privacy.html', '/privacy', privacyPolicy(settings)], ['terms.html', '/terms', termsOfService(settings)]] as const) {
+        const title = `${doc.title} · Campus Food`
+        const page = shell
+          .replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
+          .replace(/(<meta name="description" content=")[^"]*(")/, `$1${doc.description}$2`)
+          .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${title}$2`)
+          .replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${doc.description}$2`)
+          .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${SITE}${path}$2`)
+          .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${SITE}${path}$2`)
+          .replace('<div id="root"></div>', `<div id="root">${legalHtml(doc)}</div>`)
+        if (!page.includes('id="root"><main')) throw new Error(`legal pages: could not place the text in ${file}`)
+        writeFileSync(resolve(outDir, file), page)
+      }
+    },
+  }
+}
+
 /** The site-wide headers from vercel.json (one source of truth for production and local preview). */
 function vercelHeaders(): Record<string, string> {
   const config = JSON.parse(readFileSync(new URL('./vercel.json', import.meta.url), 'utf8')) as { headers: { source: string; headers: { key: string; value: string }[] }[] }
@@ -58,7 +102,7 @@ function vercelHeaders(): Record<string, string> {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), searchEngines(mode)],
+  plugins: [react(), tailwindcss(), searchEngines(mode), legalPages(mode)],
   define: { __SURFACE__: JSON.stringify(mode === 'admin' ? 'admin' : 'site') },
   server: { port: mode === 'admin' ? 5181 : 5180, strictPort: true },
   // `vite preview` serves the build with the same security headers as Vercel, so the CSP can be tested locally.

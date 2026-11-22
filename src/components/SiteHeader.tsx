@@ -170,6 +170,29 @@ function MenuPanel({ onClose }: { onClose: () => void }) {
   )
 }
 
+/**
+ * A slim second bar for signed-in people: their own pages as plain text links, always one tap away
+ * (the avatar menu keeps the theme and sign-out). Links only, never buttons.
+ */
+export function AccountBar() {
+  const { session, profile, memberships } = useAuth()
+  if (!session) return null
+  const link = ({ isActive }: { isActive: boolean }) =>
+    `shrink-0 border-b-2 py-1.5 transition-colors ${isActive ? 'border-brand text-brand' : 'border-transparent text-ink/70 hover:text-brand'}`
+  return (
+    <nav aria-label="Your account" className="border-t glass-line">
+      <div className="no-scrollbar mx-auto flex w-full max-w-7xl items-center gap-5 overflow-x-auto px-4 text-xs font-bold sm:justify-center sm:gap-8 sm:px-6 sm:text-[0.8rem]">
+        <NavLink to="/orders" className={link}>My orders</NavLink>
+        <NavLink to="/account" className={link}>Account and phone</NavLink>
+        {memberships.length ? <NavLink to="/hotel" className={link}>Hotel dashboard</NavLink> : null}
+        {profile?.role === 'rider' || profile?.role === 'admin' ? <NavLink to="/rider" className={link}>My deliveries</NavLink> : null}
+        <NavLink to="/menu" className={link}>Menu</NavLink>
+        <NavLink to="/deals" className={link}>Deals</NavLink>
+      </div>
+    </nav>
+  )
+}
+
 /** One header on every page, laid out like the reference template: MENU left, logo centre, actions right. */
 export function SiteHeader() {
   const { count } = useCart()
@@ -197,6 +220,7 @@ export function SiteHeader() {
           <Link to="/menu" className="btn ml-1 hidden md:inline-flex">Start an order</Link>
         </div>
       </header>
+      <AccountBar />
       <HeaderSlot />
       {/* Portalled to <body>: the header's backdrop blur would otherwise trap a fixed panel inside it. */}
       {open ? createPortal(<MenuPanel onClose={() => setOpen(false)} />, document.body) : null}

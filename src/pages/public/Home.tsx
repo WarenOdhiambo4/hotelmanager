@@ -13,6 +13,7 @@ import { mediaUrl, rpc } from '../../lib/supabase'
 import type { MenuItem } from '../../lib/types'
 import { feedbackSchema, fieldErrors, type FieldErrors } from '../../lib/validation'
 import { HomeFinder } from '../../components/HomeFinder'
+import { LiveOrders } from '../../components/LiveOrders'
 import { Stroke } from '../../components/Stroke'
 
 const vendorName = (menu: PublicMenu, id: string) => menu.vendors.find((v) => v.id === id)?.name ?? 'Campus kitchen'
@@ -93,6 +94,7 @@ function Hero({ menu, site }: { menu: PublicMenu; site: SiteImage[] }) {
       <img src={photo} onError={offline} alt="" aria-hidden="true" className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover blur-2xl" />
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-canvas/80" />
       <HeroPhone />
+      <LiveOrders menu={menu} />
       <div className="mx-auto max-w-5xl text-center">
         <h1 className="hand rise font-bold leading-[0.95] text-[clamp(2.4rem,5.6vw,5rem)]">
           Every campus kitchen. <span className="marker">One menu.</span>
