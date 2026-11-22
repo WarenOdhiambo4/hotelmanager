@@ -182,7 +182,8 @@ function TheDeal({ menu, site }: { menu: PublicMenu; site: SiteImage[] }) {
           The campus<Pill n={0} />food deal<br />in four<Pill n={1} />numbers
         </h2>
       </div>
-      <dl className="mx-auto mt-10 grid max-w-6xl gap-8 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+      {/* The four numbers are for tablets and computers only; phones go straight to service hours and the menu. */}
+      <dl className="mx-auto mt-10 hidden max-w-6xl gap-8 px-4 sm:grid sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         {terms.map((t) => (
           <div key={t.title} className="flex flex-col gap-1">
             <dt className="order-3 text-xs font-extrabold uppercase tracking-[0.14em] text-brand">{t.title}</dt>
@@ -383,6 +384,13 @@ export function ForHotels({ menu, site }: { menu: PublicMenu; site: SiteImage[] 
     ['Orders with the room number', 'Paid orders land on your dashboard with a chime, the block, the room and the phone.'],
     ['Numbers you can bank on', 'Daily sales, refunds and fees owed on one screen. Download it, settle it, move on.'],
   ]
+  // Phones get the case in four plain, direct statements: no labels, no explanations.
+  const phoneLines = [
+    'The customer pays your Paybill. Not us. Not tomorrow. Today.',
+    'Your menu price stays your menu price. We charge the customer, never your plate.',
+    'Every paid order rings on your screen with the block, the room and the phone.',
+    'Every shilling sold, refunded and owed is on one screen. Count it. Bank it.',
+  ]
   return (
     <section className="relative z-10 px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-[1fr_1.2fr]">
@@ -390,7 +398,12 @@ export function ForHotels({ menu, site }: { menu: PublicMenu; site: SiteImage[] 
         <div>
           <p className="hand text-2xl text-brand">for hotel owners</p>
           <h2 className={h2}>Every hostel, office and gate is a table in your hotel</h2>
-          <dl className="mt-6 grid gap-5 sm:grid-cols-2">
+          <ul className="mt-6 flex flex-col gap-4 sm:hidden">
+            {phoneLines.map((l) => (
+              <li key={l} className="border-t glass-line pt-3 text-base font-bold leading-snug">{l}</li>
+            ))}
+          </ul>
+          <dl className="mt-6 hidden gap-5 sm:grid sm:grid-cols-2">
             {points.map(([t, d]) => (
               <div key={t} className="border-t glass-line pt-3">
                 <dt className="text-sm font-extrabold">{t}</dt>
