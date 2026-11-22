@@ -1,25 +1,79 @@
 <!doctype html>
-<html lang="en" data-theme="berry">
+<html lang="en-KE" data-theme="berry">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Campus Food · Hotel prices, M-Pesa checkout, delivered to your block</title>
-    <meta name="description" content="Every verified campus hotel on one live menu. Hotel prices, one flat service fee, M-Pesa straight to the hotel." />
+    <!-- SEO: the admin build replaces everything between these markers with noindex (see vite.config.ts). -->
+    <!--seo:start-->
+    <title>Campus Food Kisii · Verified Campus Hotels, Paid by M-PESA, Delivered to Your Hostel</title>
+    <meta name="description" content="Order from verified Kisii University hotels at their own menu prices. You pay the hotel directly by M-PESA, every order is tracked and receipted, and we deliver to your hostel." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://campus.waren.digital/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Campus Food Kisii" />
+    <meta property="og:locale" content="en_KE" />
+    <meta property="og:title" content="Campus Food Kisii · Verified Campus Hotels, Paid by M-PESA, Delivered to Your Hostel" />
+    <meta property="og:description" content="Order from verified Kisii University hotels at their own menu prices. You pay the hotel directly by M-PESA, every order is tracked and receipted, and we deliver to your hostel." />
+    <meta property="og:url" content="https://campus.waren.digital/" />
+    <meta property="og:image" content="https://campus.waren.digital/brand/og-campus-food.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Burgers, chicken, fries and drinks from a Kisii campus hotel" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Campus Food Kisii · Verified Campus Hotels, Paid by M-PESA, Delivered to Your Hostel" />
+    <meta name="twitter:description" content="Order from verified Kisii University hotels at their own menu prices. You pay the hotel directly by M-PESA, every order is tracked and receipted, and we deliver to your hostel." />
+    <meta name="twitter:image" content="https://campus.waren.digital/brand/og-campus-food.jpg" />
+    <meta name="geo.region" content="KE-16" />
+    <meta name="geo.placename" content="Kisii" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://campus.waren.digital/#organization",
+            "name": "Campus Food Kisii",
+            "url": "https://campus.waren.digital/",
+            "logo": "https://campus.waren.digital/brand/campus-food-mark.svg",
+            "areaServed": { "@type": "City", "name": "Kisii", "containedInPlace": { "@type": "Country", "name": "Kenya" } }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://campus.waren.digital/#website",
+            "name": "Campus Food Kisii",
+            "url": "https://campus.waren.digital/",
+            "inLanguage": "en-KE",
+            "publisher": { "@id": "https://campus.waren.digital/#organization" }
+          },
+          {
+            "@type": "Service",
+            "name": "Campus food ordering and delivery",
+            "serviceType": "Food delivery",
+            "description": "Meals from verified hotels near Kisii University, sold at each hotel's own menu price, paid directly to the hotel by M-PESA and delivered to student hostels.",
+            "provider": { "@id": "https://campus.waren.digital/#organization" },
+            "areaServed": { "@type": "City", "name": "Kisii" },
+            "availableChannel": { "@type": "ServiceChannel", "serviceUrl": "https://campus.waren.digital/menu" }
+          }
+        ]
+      }
+    </script>
+    <!--seo:end-->
     <meta name="theme-color" content="#d7263d" />
     <link rel="icon" type="image/svg+xml" href="/brand/campus-food-mark.svg" />
     <link rel="apple-touch-icon" href="/brand/campus-food-mark.svg" />
+    <!-- Speed: connect early to the image and API host; start the hero photo (the largest thing on the first screen) at once. -->
+    <link rel="preconnect" href="https://owlnhsqeyzxdtpfphnyr.supabase.co" crossorigin />
+    <link rel="preload" as="image" href="https://owlnhsqeyzxdtpfphnyr.supabase.co/storage/v1/object/public/media/site/hero/hero-food.webp" fetchpriority="high" />
+    <!-- Fonts load without blocking the first paint (text shows in a system font, then swaps). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Itim&family=Caveat:wght@500;700&family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet" />
-    <script>
-      // Apply the saved theme before the first paint (no flash).
-      try {
-        var t = localStorage.getItem('campusFoodTheme')
-        if (t) document.documentElement.dataset.theme = t
-      } catch (e) {}
-    </script>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anton&family=Itim&family=Caveat:wght@500;700&family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" />
+    <link rel="stylesheet" media="print" data-defer-style href="https://fonts.googleapis.com/css2?family=Anton&family=Itim&family=Caveat:wght@500;700&family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Itim&family=Caveat:wght@500;700&family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" /></noscript>
+    <script src="/boot.js"></script>
   </head>
   <body>
+    <noscript>Campus Food Kisii needs JavaScript to show the live menu. Please enable it, or order on WhatsApp.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

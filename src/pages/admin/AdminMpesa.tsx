@@ -1,3 +1,4 @@
+import { payoutSchema, reversalSchema } from '../../lib/validation'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
 import { HeaderActions, Sheet } from '../../components/HeaderBar'
@@ -111,10 +112,17 @@ export function AdminMpesa() {
 
 function ReverseForm({ fee, onSubmit }: { fee: Fee; onSubmit: (reason: string) => void }) {
   const [reason, setReason] = useState('')
+  const [error, setError] = useState<string | undefined>()
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    const parsed = reversalSchema.safeParse({ reason })
+    if (!parsed.success) { setError(parsed.error.issues[0]?.message); return }
+    setError(undefined); onSubmit(parsed.data.reason)
+  }
   return (
-    <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSubmit(reason.trim()) }} className="flex flex-col gap-6">
+    <form onSubmit={submit} noValidate className="flex flex-col gap-6">
       <p>Send {kes(fee.amount)} ({fee.mpesaReceipt}) back to the payer. The hotel's balance goes back up by the same amount when Safaricom confirms.</p>
-      <TextField label="Reason" value={reason} onChange={setReason} placeholder="Paid twice by mistake" />
+      <TextField label="Reason" value={reason} onChange={setReason} placeholder="Paid twice by mistake" error={error} />
       <button type="submit" className="btn self-start" disabled={reason.trim().length < 3}>Reverse it</button>
     </form>
   )
@@ -133,9 +141,17 @@ function AssignForm({ fee, hotels, onSubmit }: { fee: Fee; hotels: Hotel[]; onSu
 
 function PayoutForm({ hotels, onSubmit }: { hotels: Hotel[]; onSubmit: (row: Record<string, unknown>) => void }) {
   const [f, setF] = useState({ kind: 'b2c', recipient: '', recipientType: 'paybill', accountReference: '', amount: '', reason: '', vendorId: '' })
+  const [error, setError] = useState<string | null>(null)
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    const parsed = payoutSchema.safeParse(f)
+    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? 'Check the form.'); return }
+    setError(null)
+    onSubmit({ kind: parsed.data.kind, recipient: parsed.data.recipient, recipientType: parsed.data.kind === 'b2c' ? 'phone' : f.recipientType,
+      accountReference: f.accountReference.trim().slice(0, 20) || null, amount: parsed.data.amount, reason: parsed.data.reason, vendorId: f.vendorId || null })
+  }
   return (
-    <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSubmit({ kind: f.kind, recipient: f.recipient, recipientType: f.kind === 'b2c' ? 'phone' : f.recipientType,
-      accountReference: f.accountReference || null, amount: Number(f.amount), reason: f.reason.trim(), vendorId: f.vendorId || null }) }} className="flex flex-col gap-6">
+    <form onSubmit={submit} noValidate className="flex flex-col gap-6">
       <Select label="Pay" value={f.kind} onChange={(v) => setF({ ...f, kind: v })} options={[{ value: 'b2c', label: 'A person (M-PESA number, B2C)' }, { value: 'b2b', label: 'A business (Paybill or Till, B2B)' }]} />
       {f.kind === 'b2b' ? <Select label="Their number is a" value={f.recipientType} onChange={(v) => setF({ ...f, recipientType: v })} options={[{ value: 'paybill', label: 'Paybill' }, { value: 'till', label: 'Till' }]} /> : null}
       <TextField label={f.kind === 'b2c' ? 'M-PESA number' : `${f.recipientType === 'till' ? 'Till' : 'Paybill'} number`} value={f.recipient} onChange={(v) => setF({ ...f, recipient: v })} />
@@ -143,6 +159,7 @@ function PayoutForm({ hotels, onSubmit }: { hotels: Hotel[]; onSubmit: (row: Rec
       <TextField label="Amount (KES)" inputMode="numeric" value={f.amount} onChange={(v) => setF({ ...f, amount: v.replace(/[^\d]/g, '') })} />
       <TextField label="Reason" value={f.reason} onChange={(v) => setF({ ...f, reason: v })} placeholder="Refund for a double payment" />
       <Select label="About a hotel (optional)" value={f.vendorId} onChange={(v) => setF({ ...f, vendorId: v })} placeholder="None" options={hotels.map((h) => ({ value: h.vendorId, label: h.vendorName }))} />
+      {error ? <p className="text-sm font-bold text-danger">{error}</p> : null}
       <button type="submit" className="btn self-start" disabled={!f.recipient || Number(f.amount) < 10 || f.reason.trim().length < 3}>Request payout</button>
     </form>
   )

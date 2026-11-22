@@ -79,7 +79,7 @@ export const DEFAULT_SETTINGS: PlatformSettings = {
   whatsappNumber: null,
   feePaybill: null,
   feeAccountName: null,
-  heroTagline: 'Hotel prices. M-Pesa checkout. Your block, your plate.',
+  heroTagline: 'Verified kitchens. Transparent pricing. Direct M-PESA settlement. Dependable delivery.',
 }
 
 export function useSettings(): Loadable<PlatformSettings> {

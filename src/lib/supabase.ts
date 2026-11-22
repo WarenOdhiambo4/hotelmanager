@@ -82,10 +82,32 @@ export function mediaUrl(path?: string | null, _width?: number): string | null {
   return supabase.storage.from('media').getPublicUrl(path).data.publicUrl
 }
 
+/**
+ * Makes a photo light before upload (pages stay fast on slow phones): anything wider or taller than 1600 px, or
+ * heavier than 350 kB, is redrawn at most 1600 px on its long side and saved as WebP. Falls back to the original
+ * when the browser cannot encode WebP, or when the result would not be smaller.
+ */
+async function lighten(file: File, maxSide = 1600, maxBytes = 350 * 1024): Promise<File> {
+  if (typeof createImageBitmap !== 'function') return file
+  let bitmap: ImageBitmap
+  try { bitmap = await createImageBitmap(file) } catch { return file }
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
+  if (scale === 1 && file.size <= maxBytes) { bitmap.close(); return file }
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(bitmap.width * scale)
+  canvas.height = Math.round(bitmap.height * scale)
+  canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  bitmap.close()
+  const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, 'image/webp', 0.8))
+  if (!blob || blob.type !== 'image/webp' || blob.size >= file.size) return file
+  return new File([blob], file.name.replace(/\.\w+$/, '') + '.webp', { type: 'image/webp' })
+}
+
 /** Uploads an image to media/<folder>/<random>.<ext> and returns its storage path. */
-export async function uploadImage(folder: string, file: File): Promise<string> {
-  if (!/^image\/(jpeg|png|webp|avif)$/.test(file.type)) throw new Error('Use a JPG, PNG, WebP or AVIF image.')
-  if (file.size > 5 * 1024 * 1024) throw new Error('Images must be 5 MB or smaller.')
+export async function uploadImage(folder: string, original: File): Promise<string> {
+  if (!/^image\/(jpeg|png|webp|avif)$/.test(original.type)) throw new Error('Use a JPG, PNG, WebP or AVIF image.')
+  if (original.size > 5 * 1024 * 1024) throw new Error('Images must be 5 MB or smaller.')
+  const file = await lighten(original)
   const ext = file.type.split('/')[1]!.replace('jpeg', 'jpg')
   const path = `${folder}/${crypto.randomUUID()}.${ext}`
   const { error } = await db().storage.from('media').upload(path, file, { cacheControl: '31536000', upsert: false, contentType: file.type })

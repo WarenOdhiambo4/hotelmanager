@@ -1,0 +1,60 @@
+# Frontend CI: runs on every push and pull request. Vercel deploys separately; a red CI means do not merge.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build public site (campus.waren.digital)
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://owlnhsqeyzxdtpfphnyr.supabase.co
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_SITE_URL: https://campus.waren.digital
+          VITE_ADMIN_URL: https://admin.waren.digital
+
+      - name: Build admin portal (admin.waren.digital)
+        run: npm run build:admin
+        env:
+          VITE_SUPABASE_URL: https://owlnhsqeyzxdtpfphnyr.supabase.co
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_SITE_URL: https://campus.waren.digital
+          VITE_ADMIN_URL: https://admin.waren.digital
+
+      - name: Search engine files are present, admin is noindex
+        run: |
+          test -f dist/robots.txt && test -f dist/sitemap.xml
+          grep -q 'Disallow: /$' dist-admin/robots.txt
+          grep -q 'noindex' dist-admin/index.html
+
+      - name: Dependency audit (high and critical only)
+        run: npm audit --omit=dev --audit-level=high

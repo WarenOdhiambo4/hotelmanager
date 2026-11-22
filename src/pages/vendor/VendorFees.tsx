@@ -5,6 +5,7 @@ import { useLoad, useSettings } from '../../lib/data'
 import { dateTime, kes } from '../../lib/format'
 import { db, friendly, rpc, supabase } from '../../lib/supabase'
 import { useVendor } from './VendorLayout'
+import { feePaySchema, mpesaCodeSchema } from '../../lib/validation'
 
 type FeeRow = { id: string; method: 'stk' | 'paybill' | 'verified'; amount: number; status: string; mpesaReceipt: string | null; resultDesc: string | null; createdAt: string; completedAt: string | null }
 const STATUS_WORDS: Record<string, string> = {
@@ -54,16 +55,22 @@ export function VendorFees() {
   const [msg, setMsg] = useState<{ tone: 'error' | 'success'; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const pay = async (e: FormEvent) => {
-    e.preventDefault(); setMsg(null); setBusy(true)
-    const value = Number(amount || balance)
-    const { error } = await db().from('feePayments').insert({ vendorId: v.id, method: 'stk', phone, amount: value })
+    e.preventDefault(); setMsg(null)
+    const parsed = feePaySchema.safeParse({ phone, amount: amount || Math.ceil(balance) })
+    if (!parsed.success) { setMsg({ tone: 'error', text: parsed.error.issues[0]?.message ?? 'Check the form.' }); return }
+    setBusy(true)
+    const value = parsed.data.amount
+    const { error } = await db().from('feePayments').insert({ vendorId: v.id, method: 'stk', phone: parsed.data.phone, amount: value })
     setBusy(false)
     setMsg(error ? { tone: 'error', text: friendly(error) } : { tone: 'success', text: `An M-PESA prompt for ${kes(Math.ceil(value))} is on its way to ${phone}. Enter the M-PESA PIN; your balance updates as soon as Safaricom confirms.` })
     setAmount(''); reload()
   }
   const verify = async (e: FormEvent) => {
-    e.preventDefault(); setMsg(null); setBusy(true)
-    const { error } = await db().from('feePayments').insert({ vendorId: v.id, method: 'verified', amount: 1, mpesaReceipt: code })
+    e.preventDefault(); setMsg(null)
+    const parsed = mpesaCodeSchema.safeParse({ code })
+    if (!parsed.success) { setMsg({ tone: 'error', text: parsed.error.issues[0]?.message ?? 'Check the code.' }); return }
+    setBusy(true)
+    const { error } = await db().from('feePayments').insert({ vendorId: v.id, method: 'verified', amount: 1, mpesaReceipt: parsed.data.code })
     setBusy(false)
     setMsg(error ? { tone: 'error', text: friendly(error) } : { tone: 'success', text: `Checking ${code.toUpperCase()} with Safaricom. Your balance updates when it is confirmed.` })
     setCode(''); reload()

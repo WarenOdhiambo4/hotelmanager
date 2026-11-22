@@ -86,3 +86,31 @@ export function fieldErrors<T>(error: z.ZodError): FieldErrors<T> {
   }
   return out as FieldErrors<T>
 }
+
+// ---- Calls, payments and fees -------------------------------------------------------------------------------------
+/** "Call me back" pop-up (visitors too). */
+export const callbackSchema = z.object({
+  phone: kenyanPhone,
+  topic: z.string().trim().min(2, 'Say what you need help with').max(200, 'Keep it under 200 characters'),
+})
+/** Pay an order: the Safaricom number the M-PESA prompt goes to. */
+export const payPhoneSchema = z.object({ phone: kenyanPhone })
+/** Hotel pays Campus Food fees by M-PESA prompt. */
+export const feePaySchema = z.object({
+  phone: kenyanPhone,
+  amount: z.coerce.number().int('Whole shillings only').min(1, 'At least KES 1').max(150000, 'At most KES 150,000 per payment'),
+})
+/** An M-PESA confirmation code, e.g. TKL4QX92ZB. */
+export const mpesaCodeSchema = z.object({ code: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{10}$/, 'An M-PESA code has 10 letters and numbers') })
+/** Admin: reverse a fee payment (reason is shown to finance and kept in the audit trail). */
+export const reversalSchema = z.object({ reason: z.string().trim().min(5, 'Give a short reason').max(300) })
+/** Admin: payout to a phone (B2C) or a business (B2B). */
+export const payoutSchema = z.object({
+  kind: z.enum(['b2c', 'b2b']),
+  recipient: z.string().trim().min(5, 'Enter the recipient').max(20),
+  amount: z.coerce.number().int('Whole shillings only').min(10, 'At least KES 10').max(250000, 'At most KES 250,000'),
+  reason: z.string().trim().min(5, 'Give a short reason').max(100),
+}).superRefine((v, ctx) => {
+  if (v.kind === 'b2c' && !/^(?:\+?254|0)?[17]\d{8}$/.test(v.recipient.replace(/[\s-]/g, ''))) ctx.addIssue({ code: 'custom', path: ['recipient'], message: 'Enter a Kenyan mobile number' })
+  if (v.kind === 'b2b' && !/^\d{5,7}$/.test(v.recipient)) ctx.addIssue({ code: 'custom', path: ['recipient'], message: 'Enter a Paybill or Till number (5 to 7 digits)' })
+})

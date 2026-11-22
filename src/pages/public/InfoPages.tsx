@@ -32,7 +32,7 @@ export function About() {
   const { data: menu } = usePublicMenu()
   const { data: settings } = useSettings()
   const { data: site } = useSiteImages()
-  useEffect(() => setTitle('About'), [])
+  useEffect(() => setTitle('About Us', 'Campus Food connects Kisii University students with verified campus hotels: honest menu prices, one flat service fee, payment straight to the hotel by M-PESA, and delivery to your door.'), [])
   const pics = photosFor('together', site, menu, 3)
   const coverFor = (id: string) => (menu.items.find((i) => i.vendorId === id && i.isSignature && i.imagePath) ?? menu.items.find((i) => i.vendorId === id && i.imagePath))?.imagePath ?? null
   const why = [
@@ -146,7 +146,7 @@ function useAllOffers() {
 export function Deals() {
   const { data: menu } = usePublicMenu()
   const { data: offers, loading } = useAllOffers()
-  useEffect(() => setTitle('Deals and dinners'), [])
+  useEffect(() => setTitle('Deals and Dinners', 'This week’s meal deals and dinner offers from verified hotels around Kisii University. Prices set by the hotels themselves, paid by M-PESA, delivered to your hostel.'), [])
   const hotel = (id: string | null) => (id ? menu.vendors.find((v) => v.id === id)?.name : null) ?? 'Every campus hotel'
   return (
     <>
@@ -230,7 +230,7 @@ export function Contact() {
   const { data: menu } = usePublicMenu()
   const { data: site } = useSiteImages()
   const { data: settings } = useSettings()
-  useEffect(() => setTitle('Contact'), [])
+  useEffect(() => setTitle('Contact Us', 'Talk to Campus Food in Kisii: call Amani, our receptionist, message us on WhatsApp, or ask for a call-back. Help with orders, payments, refunds, hotels and riders.'), [])
   const wa = whatsappLink('Hi Campus Food', settings.whatsappNumber ?? undefined)
   // Phone, email and WhatsApp come from Settings in the staff portal; a row appears once it is filled in.
   const reach: [string, ReactNode, string][] = []

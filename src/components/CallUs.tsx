@@ -4,6 +4,7 @@ import { CloseIcon, PhoneIcon } from './Icons'
 import { useSettings } from '../lib/data'
 import { rpc } from '../lib/supabase'
 import { whatsappLink } from '../lib/site'
+import { callbackSchema } from '../lib/validation'
 
 /** ElevenLabs voice agent (the AI receptionist "Amani"). Without it, the pop-up still offers a call-back and WhatsApp. */
 const AGENT_ID = String(import.meta.env.VITE_ELEVENLABS_AGENT_ID ?? '').trim()
@@ -35,7 +36,7 @@ function ringTone(): () => void {
   const t0 = ctx.currentTime
   for (let cycle = 0; cycle < 6; cycle++) {
     const c = t0 + cycle * 3
-    for (const [on, off] of [[0, 0.4], [0.6, 1.0]]) {
+    for (const [on, off] of [[0, 0.4], [0.6, 1.0]] as const) {
       gain.gain.setValueAtTime(0.12, c + on)
       gain.gain.setValueAtTime(0, c + off)
     }
@@ -251,10 +252,11 @@ function CallbackForm() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (topic.trim().length < 2) { setMsg({ ok: false, text: 'Say what you need help with.' }); return }
+    const parsed = callbackSchema.safeParse({ phone, topic })
+    if (!parsed.success) { setMsg({ ok: false, text: parsed.error.issues[0]?.message ?? 'Check the form.' }); return }
     setBusy(true); setMsg(null)
     try {
-      const res = await rpc<{ message: string }>('requestCallback', { pName: '', pPhone: phone, pTopic: topic.trim() })
+      const res = await rpc<{ message: string }>('requestCallback', { pName: '', pPhone: parsed.data.phone, pTopic: parsed.data.topic })
       setMsg({ ok: true, text: res.message }); setPhone(''); setTopic('')
     } catch (err) {
       setMsg({ ok: false, text: (err as Error).message })

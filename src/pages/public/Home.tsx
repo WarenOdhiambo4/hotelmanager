@@ -106,9 +106,6 @@ function Hero({ menu, site }: { menu: PublicMenu; site: SiteImage[] }) {
             </svg>
           </span>
         </p>
-        <p className="story rise mx-auto mt-6 max-w-2xl text-sm text-ink/75 sm:text-base" style={{ animationDelay: '260ms' }}>
-          Campus Food lists every verified hotel near campus at its own menu price. You pay the kitchen directly through M-Pesa, and we deliver to your hostel, office or gate.
-        </p>
         <div className="relative rise mt-8 inline-flex flex-wrap justify-center gap-3" style={{ animationDelay: '360ms' }}>
           <Link to="/menu" className="btn btn-lg">Browse today&apos;s menu</Link>
           <Link to="/deals" className="btn btn-ghost btn-lg !bg-canvas hover:!bg-ink/10">See this week&apos;s deals</Link>

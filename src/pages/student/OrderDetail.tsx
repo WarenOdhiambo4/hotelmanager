@@ -1,3 +1,4 @@
+import { payPhoneSchema } from '../../lib/validation'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ScooterDrawing } from '../../components/Drawings'
@@ -130,10 +131,12 @@ function PayNow({ order, payments, onChange, draftMinutes }: { order: Order; pay
   const last = payments[0]
   async function pay(e: FormEvent) {
     e.preventDefault()
+    const parsed = payPhoneSchema.safeParse({ phone })
+    if (!parsed.success) { setMessage({ tone: 'error', text: parsed.error.issues[0]?.message ?? 'Check the number.' }); return }
     setBusy(true)
     setMessage(null)
     try {
-      const r = await callFunction<{ message: string }>('mpesa-stk-push', { orderId: order.id, phone })
+      const r = await callFunction<{ message: string }>('mpesa-stk-push', { orderId: order.id, phone: parsed.data.phone })
       setMessage({ tone: 'success', text: r.message })
       onChange()
     } catch (err) {

@@ -13,18 +13,18 @@ import { ThemePicker } from './ThemePicker'
 export function RevealFooter() {
   const { data: menu } = usePublicMenu()
   const { data: settings } = useSettings()
-  const year = new Date().getFullYear()
   const band = (menu.items.length ? menu.items.slice(0, 8) : [
     { id: 'a', name: 'Pilau', imagePath: null }, { id: 'b', name: 'Chapati', imagePath: null },
     { id: 'c', name: 'Burgers', imagePath: null }, { id: 'd', name: 'Chai', imagePath: null },
   ]) as { id: string; name: string; imagePath: string | null }[]
   const wa = whatsappLink('Hi Campus Food', settings.whatsappNumber ?? undefined)
-  const head = 'text-xs font-extrabold uppercase tracking-[0.16em]'
-  const link = 'text-muted transition-colors hover:text-brand'
+  // Footer type: Itim, regular weight, italic, set larger than body text (the .menu-font class).
+  const head = 'text-xs font-extrabold uppercase tracking-[0.16em] not-italic text-ink'
+  const link = 'text-ink/75 transition-colors hover:text-brand'
 
   return (
-    <footer className="relative h-[60rem] sm:h-[44rem] lg:h-[34rem] no-print" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}>
-      <div className="fixed bottom-0 left-0 flex h-[60rem] w-full flex-col border-t glass-line bg-canvas sm:h-[44rem] lg:h-[34rem]">
+    <footer className="relative h-[62rem] sm:h-[46rem] lg:h-[36rem] no-print" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}>
+      <div className="fixed bottom-0 left-0 flex h-[62rem] w-full flex-col border-t glass-line bg-canvas sm:h-[46rem] lg:h-[36rem]">
         <div className="overflow-hidden border-b glass-line py-3" aria-hidden="true">
           <div className="marquee flex items-center gap-8" style={{ ['--marquee-speed' as string]: '45s' }}>
             {[...band, ...band, ...band, ...band].map((i, n) => (
@@ -35,10 +35,13 @@ export function RevealFooter() {
             ))}
           </div>
         </div>
-        <div className="mx-auto grid w-full max-w-7xl flex-1 content-center gap-x-12 gap-y-10 px-6 py-10 text-sm sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1.3fr]">
+        <div className="menu-font mx-auto grid w-full max-w-7xl flex-1 content-center gap-x-12 gap-y-10 px-6 py-10 text-base leading-relaxed sm:grid-cols-2 sm:text-[1.0625rem] lg:grid-cols-[1.3fr_1fr_1fr_1.3fr]">
           <section>
             <Logo />
-            <p className="mt-4 max-w-xs text-muted">{settings.heroTagline}</p>
+            <p className="mt-4 max-w-sm leading-snug text-ink/80">
+              Campus Food is a food e-commerce platform for Kisii University: ordering, M-PESA payment, tracking and delivery from verified hotels and student sellers.
+            </p>
+            <p className="mt-3 max-w-sm leading-snug text-ink/80">Our value is to be, at once, fully transparent and fully accountable.</p>
           </section>
           <nav aria-label="Footer">
             <h2 className={head}>Campus Food</h2>
@@ -54,7 +57,7 @@ export function RevealFooter() {
           </nav>
           <section>
             <h2 className={head}>Service hours</h2>
-            <p className="mt-4 text-muted">{settings.serviceHours}</p>
+            <p className="mt-4 text-ink/75">{settings.serviceHours}</p>
             <ul className="mt-4 flex flex-col gap-2">
               {settings.supportPhone ? <li><a className={link} href={`tel:${settings.supportPhone}`}>{settings.supportPhone}</a></li> : null}
               {settings.supportEmail ? <li><a className={link} href={`mailto:${settings.supportEmail}`}>{settings.supportEmail}</a></li> : null}
@@ -67,9 +70,8 @@ export function RevealFooter() {
             <div><ThemePicker compact /></div>
           </section>
         </div>
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-1 border-t glass-line px-6 py-5 text-xs text-muted sm:flex-row sm:justify-between">
-          <p>© {year} Campus Food. Payments go straight to each hotel through M-Pesa.</p>
-          <p>We never ask for your M-Pesa PIN or sign-in code.</p>
+        <div className="mx-auto w-full max-w-7xl border-t glass-line px-6 py-5 text-center">
+          <p className="text-sm font-extrabold uppercase tracking-[0.3em] text-ink/70">Food E-commerce</p>
         </div>
       </div>
     </footer>

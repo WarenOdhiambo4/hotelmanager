@@ -21,7 +21,7 @@ export function Menu() {
   const dish = params.get('dish')
   const q = (params.get('q') ?? '').trim().toLowerCase()
   const cat = (params.get('cat') ?? '').trim().toLowerCase()
-  useEffect(() => setTitle('Menu'), [])
+  useEffect(() => setTitle('Today’s Menu', 'Browse today’s menu from every verified hotel near Kisii University, at each hotel’s own price. Order in minutes, pay the hotel by M-PESA, and have it delivered to your hostel.'), [])
 
   useEffect(() => {
     if (!dish || loading) return

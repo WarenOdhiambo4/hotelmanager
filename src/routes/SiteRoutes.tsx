@@ -29,7 +29,7 @@ const VendorReports = page(vendorPages, 'VendorReports')
 const VendorSettings = page(vendorPages, 'VendorSettings')
 const VendorStaff = page(vendorPages, 'VendorStaff')
 
-/** Students, hotels and riders: yourdomain.com. This build contains no administrator pages. */
+/** Students, hotels and riders: campus.waren.digital. This build contains no administrator pages. */
 export default function SiteRoutes() {
   return (
     <Routes>

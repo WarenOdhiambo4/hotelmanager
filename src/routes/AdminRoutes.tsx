@@ -23,7 +23,7 @@ const AdminSettings = page(adminPages, 'AdminSettings')
 const AdminVendors = page(adminPages, 'AdminVendors')
 
 /**
- * Platform staff only: admin.yourdomain.com, its own Vercel project behind Cloudflare Access
+ * Platform staff only: admin.waren.digital, its own Vercel project behind Cloudflare Access
  * (admin.md). This build contains only the administrator UI and the sign-in pages.
  */
 export default function AdminRoutes() {
