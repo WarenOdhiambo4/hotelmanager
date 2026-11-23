@@ -1,3 +1,4 @@
+import { askConfirm } from '../../components/Confirm'
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
@@ -623,8 +624,8 @@ function HotelTile({ vendor: v, onChange }: { vendor: Vendor; onChange: () => vo
         <div className="mt-3 grid gap-x-10 gap-y-8 lg:grid-cols-3">
           <div className="flex flex-wrap items-center gap-3 lg:col-span-3">
             <button type="button" className="btn" onClick={() => setEditing(true)}>Edit details</button>
-            <button type="button" className="btn btn-ghost !text-danger" onClick={() => {
-              if (window.confirm(`Delete ${v.name}? Its menu, team and offers are removed too, and this cannot be undone. Hotels with orders cannot be deleted; take them offline instead.`)) {
+            <button type="button" className="btn btn-ghost !text-danger" onClick={async () => {
+              if (await askConfirm(`Delete ${v.name}? Its menu, team and offers are removed too, and this cannot be undone. Hotels with orders cannot be deleted; take them offline instead.`, { yes: 'Delete', danger: true })) {
                 void run(() => rpc('deleteVendor', { pVendorId: v.id }), `${v.name} deleted.`)
               }
             }}>Delete hotel</button>
@@ -643,8 +644,8 @@ function HotelTile({ vendor: v, onChange }: { vendor: Vendor; onChange: () => vo
             </div>
             {v.logoPath || v.coverPath ? (
               <div className="flex gap-3 text-[0.7rem] font-bold text-danger">
-                {v.logoPath ? <button type="button" onClick={() => window.confirm('Remove this logo?') && run(async () => { await rpc('forgetMedia', { pPath: v.logoPath }); await supabase!.storage.from('media').remove([v.logoPath!]) }, 'Logo removed.')}>Remove logo</button> : null}
-                {v.coverPath ? <button type="button" onClick={() => window.confirm('Remove this cover photo?') && run(async () => { await rpc('forgetMedia', { pPath: v.coverPath }); await supabase!.storage.from('media').remove([v.coverPath!]) }, 'Cover removed.')}>Remove cover</button> : null}
+                {v.logoPath ? <button type="button" onClick={async () => (await askConfirm('Remove this logo?', { yes: 'Remove', danger: true })) && run(async () => { await rpc('forgetMedia', { pPath: v.logoPath }); await supabase!.storage.from('media').remove([v.logoPath!]) }, 'Logo removed.')}>Remove logo</button> : null}
+                {v.coverPath ? <button type="button" onClick={async () => (await askConfirm('Remove this cover photo?', { yes: 'Remove', danger: true })) && run(async () => { await rpc('forgetMedia', { pPath: v.coverPath }); await supabase!.storage.from('media').remove([v.coverPath!]) }, 'Cover removed.')}>Remove cover</button> : null}
               </div>
             ) : null}
             <p className={`${label} mt-3`}>M-Pesa details</p>
@@ -1079,7 +1080,7 @@ export function AdminMedia() {
   const total = files.reduce((n, f) => n + Number(f.bytes), 0)
   async function remove(f: MediaFile) {
     const where = f.usedBy ? ` It is used as: ${f.usedBy}. Those places will show a drawing instead.` : ''
-    if (!window.confirm(`Delete this image permanently?${where} This cannot be undone.`)) return
+    if (!(await askConfirm(`Delete this image permanently?${where} This cannot be undone.`, { yes: 'Delete', danger: true }))) return
     setMsg(null)
     try {
       await rpc('forgetMedia', { pPath: f.path })

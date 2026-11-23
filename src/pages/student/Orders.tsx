@@ -1,3 +1,4 @@
+import { askConfirm } from '../../components/Confirm'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
@@ -80,7 +81,7 @@ function OrderCard({ order, payment, rating, refundWindow, onChange }: {
   const count = items.reduce((n, i) => n + i.quantity, 0)
 
   async function cancel() {
-    if (!window.confirm(`Cancel ${order.reference}?`)) return
+    if (!(await askConfirm(`Cancel ${order.reference}? You can always order again.`, { yes: 'Yes, cancel', danger: true }))) return
     try { await rpc('cancelUnpaidOrder', { pOrderId: order.id }); onChange() } catch (e) { setMessage(friendly(e)) }
   }
 

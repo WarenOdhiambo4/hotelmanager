@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import { HeaderSlotProvider } from './components/HeaderBar'
+import { ConfirmHost } from './components/Confirm'
 import { ErrorBoundary } from './components/SiteLayout'
 import { CartProvider } from './lib/cart'
 
@@ -25,6 +26,7 @@ export default function App() {
               <SurfaceRoutes />
             </Suspense>
             </HeaderSlotProvider>
+            <ConfirmHost />
           </BrowserRouter>
         </CartProvider>
       </AuthProvider>

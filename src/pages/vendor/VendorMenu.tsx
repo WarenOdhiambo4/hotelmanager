@@ -1,3 +1,4 @@
+import { askConfirm } from '../../components/Confirm'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { DishShelf, DishTile } from '../../components/DishShelf'
 import { FoodImage } from '../../components/FoodImage'
@@ -110,7 +111,7 @@ function Categories({ vendorId, categories, items, onChange }: { vendorId: strin
     } catch (err) { setMsg({ tone: 'error', text: friendly(err) }) }
   }
   async function remove(c: MenuCategory) {
-    if (!window.confirm(`Remove the category ${c.name}? Its dishes stay on the menu without a category.`)) return
+    if (!(await askConfirm(`Remove the category ${c.name}? Its dishes stay on the menu without a category.`, { yes: 'Remove', danger: true }))) return
     const { error } = await db().from('menuCategories').delete().eq('id', c.id)
     if (error) setMsg({ tone: 'error', text: friendly(error) }); else onChange()
   }
@@ -181,7 +182,7 @@ function DishForm({ item, categories, vendorId, onDone, onCancel }: { item: Menu
     }
   }
   async function remove() {
-    if (!item || !window.confirm(`Remove ${item.name} from the menu? Past orders keep their record.`)) return
+    if (!item || !(await askConfirm(`Remove ${item.name} from the menu? Past orders keep their record.`, { yes: 'Remove', danger: true }))) return
     const { error } = await db().from('menuItems').delete().eq('id', item.id)
     if (error) setProblem(friendly(error)); else onDone()
   }
@@ -263,7 +264,7 @@ function BulkPrices({ items, categories, onDone }: { items: MenuItem[]; categori
   async function apply(e: FormEvent) {
     e.preventDefault()
     if (!valid || !chosen.length) return
-    if (!window.confirm(`Change ${chosen.length} price${chosen.length === 1 ? '' : 's'}? Orders already placed keep their old price.`)) return
+    if (!(await askConfirm(`Change ${chosen.length} price${chosen.length === 1 ? '' : 's'}? Orders already placed keep their old price.`, { yes: 'Change prices', no: 'Not yet' }))) return
     setBusy(true); setMsg(null)
     try {
       for (const it of chosen) {

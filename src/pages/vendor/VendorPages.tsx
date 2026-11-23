@@ -1,3 +1,4 @@
+import { askConfirm } from '../../components/Confirm'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
 import { FoodImage } from '../../components/FoodImage'
@@ -87,7 +88,7 @@ export function VendorSettings() {
     e.preventDefault()
     const parsed = vendorSchema.safeParse(form)
     if (!parsed.success) { setErrors(fieldErrors<VendorForm>(parsed.error)); return }
-    if (mpesaChanged && !window.confirm('Changing M-Pesa details takes your hotel offline until Campus Food verifies the new number. Continue?')) return
+    if (mpesaChanged && !(await askConfirm('Changing M-Pesa details takes your hotel offline until Campus Food verifies the new number. Continue?', { yes: 'Continue', no: 'Not yet' }))) return
     setErrors({}); setBusy(true); setMsg(null)
     try {
       const logoPath = logo ? await uploadImage(`vendors/${v.id}/brand`, logo) : v.logoPath

@@ -1,3 +1,4 @@
+import { askConfirm } from '../../components/Confirm'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
 import { HeaderActions, Sheet } from '../../components/HeaderBar'
@@ -168,7 +169,7 @@ function KnowledgeForm({ row, onDone }: { row: KnowledgeRow | null; onDone: () =
     onDone()
   }
   async function remove() {
-    if (!row || !window.confirm('Delete this answer?')) return
+    if (!row || !(await askConfirm('Delete this answer?', { yes: 'Delete', danger: true }))) return
     const { error } = await db().from('knowledgeBase').delete().eq('id', row.id)
     if (error) { setMsg(friendly(error)); return }
     onDone()
