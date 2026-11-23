@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Analytics } from '@vercel/analytics/react'
 import App from './App'
 import './index.css'
 import { SURFACE } from './lib/site'
@@ -20,5 +21,7 @@ window.addEventListener('vite:preloadError', (event) => {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
+    {/* Vercel Web Analytics: cookieless page-view counts, served from this site (/_vercel/insights). */}
+    <Analytics />
   </StrictMode>,
 )

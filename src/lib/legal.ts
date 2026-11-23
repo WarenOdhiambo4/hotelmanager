@@ -48,7 +48,7 @@ export function privacyPolicy(s: LegalSettings): LegalDoc {
           'Payment records from Safaricom M-PESA: amount, M-PESA receipt number, the phone number that paid and the result. We never see or store your M-PESA PIN.',
           'Messages and calls: what you send us on WhatsApp, call-back requests, and, if you use the voice receptionist, the audio and transcript of that call.',
           'Feedback and reviews you choose to send us.',
-          'Technical data: your device and browser type, and the settings saved in your browser (such as your theme, cart and sign-in session). We do not use advertising cookies or third-party trackers.',
+          'Technical data: your device and browser type, the settings saved in your browser (such as your theme, cart and sign-in session), anonymous page-view counts from Vercel Web Analytics (no cookies, no individual profiles), and a Cloudflare Turnstile security check on sign-in and registration forms to stop bots. We do not use advertising cookies or third-party trackers.',
         ],
       },
       {
@@ -85,7 +85,7 @@ export function privacyPolicy(s: LegalSettings): LegalDoc {
         list: [
           'The hotel or seller you order from: your name, phone number, delivery location and order, so they can prepare and deliver it.',
           'The rider assigned to your order: what they need to deliver it (name, phone, delivery location).',
-          'Service providers who process data for us under contract and only on our instructions: Supabase (database, sign-in and file storage), Vercel (website hosting), Safaricom M-PESA (payments), Africa’s Talking (SMS), Meta WhatsApp (optional messages), ElevenLabs (voice receptionist calls), Google Gemini (answering WhatsApp and support questions) and our email delivery provider.',
+          'Service providers who process data for us under contract and only on our instructions: Supabase (database, sign-in and file storage), Vercel (website hosting and anonymous visit statistics), Cloudflare Turnstile (bot protection on sign-in forms), Safaricom M-PESA (payments), Africa’s Talking (SMS), Meta WhatsApp (optional messages), ElevenLabs (voice receptionist calls), Google Gemini (answering WhatsApp and support questions) and our email delivery provider.',
           'Authorities, when the law requires it, or to protect the rights and safety of our users.',
         ],
         after: [

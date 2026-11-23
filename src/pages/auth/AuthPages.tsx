@@ -1,8 +1,10 @@
 // Sign in, sign up, forgot and reset password: the COMPLIANCE365 flows (generic answers that never
 // reveal which emails have accounts, resend with rate-limit messages, bait field for bots), with
-// Campus Food's email codes: Supabase Auth emails a 6-digit code (through Resend SMTP).
+// Campus Food's email codes: Supabase Auth emails a 6-digit code. Every request Supabase protects with captcha
+// (sign in, email code, register, resend, password reset) carries a Cloudflare Turnstile token.
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { CAPTCHA_FAILED, CAPTCHA_WAIT, isCaptchaError, useCaptcha } from '../../components/Captcha'
 import { Logo } from '../../components/Logo'
 import { Bait, Notice, TextField } from '../../components/form'
 import { setTitle, SURFACE } from '../../lib/site'
@@ -75,6 +77,7 @@ function CodeStep({ email, type, onBack, onDone }: { email: string; type: 'signu
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const captcha = useCaptcha()
   async function verify(e: FormEvent) {
     e.preventDefault()
     const parsed = codeSchema.safeParse({ code })
@@ -87,9 +90,13 @@ function CodeStep({ email, type, onBack, onDone }: { email: string; type: 'signu
   }
   async function resend() {
     setInfo(null); setError(null)
+    if (!captcha.ready) { setError(CAPTCHA_WAIT); return }
+    const captchaToken = captcha.token
     const { error } = type === 'signup'
-      ? await db().auth.resend({ type: 'signup', email, options: { emailRedirectTo: origin() } })
-      : await db().auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: origin() } })
+      ? await db().auth.resend({ type: 'signup', email, options: { emailRedirectTo: origin(), captchaToken } })
+      : await db().auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: origin(), captchaToken } })
+    captcha.reset()
+    if (isCaptchaError(error?.message)) { setError(CAPTCHA_FAILED); return }
     if (rateLimited(error?.message)) { setError('Too many requests. Wait a minute, then try again.'); return }
     setInfo('A new code is on its way. Check spam too.')
   }
@@ -103,6 +110,7 @@ function CodeStep({ email, type, onBack, onDone }: { email: string; type: 'signu
         <button type="button" className="link" onClick={resend}>Send a new code</button>
         <button type="button" className="link" onClick={onBack}>Use a different email</button>
       </div>
+      {captcha.widget}
     </form>
   )
 }
@@ -119,6 +127,7 @@ export function Login() {
   const [codeFor, setCodeFor] = useState<string | null>(null)
   const [unconfirmed, setUnconfirmed] = useState(false)
   const [bait, setBait] = useState('')
+  const captcha = useCaptcha()
   useEffect(() => setTitle('Sign in'), [])
 
   async function submit(e: FormEvent) {
@@ -128,9 +137,12 @@ export function Login() {
     if (!parsed.success) { setErrors(fieldErrors<typeof form>(parsed.error)); return }
     setErrors({})
     if (bait) { setBusy(true); setTimeout(() => { setBusy(false); setProblem('Email or password is incorrect.') }, 2000); return }
+    if (!captcha.ready) { setProblem(CAPTCHA_WAIT); return }
     setBusy(true)
-    const { error } = await db().auth.signInWithPassword(parsed.data)
+    const { error } = await db().auth.signInWithPassword({ ...parsed.data, options: { captchaToken: captcha.token } })
     setBusy(false)
+    captcha.reset()
+    if (isCaptchaError(error?.message)) { setProblem(CAPTCHA_FAILED); return }
     if (error) {
       const notConfirmed = /not confirmed/i.test(error.message)
       setUnconfirmed(notConfirmed)
@@ -144,16 +156,22 @@ export function Login() {
     setProblem(null)
     const parsed = emailOnlySchema.safeParse({ email: form.email })
     if (!parsed.success) { setErrors({ email: parsed.error.issues[0]!.message }); return }
+    if (!captcha.ready) { setProblem(CAPTCHA_WAIT); return }
     setBusy(true)
     // shouldCreateUser: false: a code never creates an account; new people use Sign up.
-    const { error } = await db().auth.signInWithOtp({ email: parsed.data.email, options: { shouldCreateUser: false, emailRedirectTo: origin() } })
+    const { error } = await db().auth.signInWithOtp({ email: parsed.data.email, options: { shouldCreateUser: false, emailRedirectTo: origin(), captchaToken: captcha.token } })
     setBusy(false)
+    captcha.reset()
+    if (isCaptchaError(error?.message)) { setProblem(CAPTCHA_FAILED); return }
     if (rateLimited(error?.message)) { setProblem('Too many requests. Wait a minute, then try again.'); return }
     setCodeFor(parsed.data.email)
   }
 
   async function resendConfirmation() {
-    const { error } = await db().auth.resend({ type: 'signup', email: form.email.trim().toLowerCase(), options: { emailRedirectTo: origin() } })
+    if (!captcha.ready) { setProblem(CAPTCHA_WAIT); return }
+    const { error } = await db().auth.resend({ type: 'signup', email: form.email.trim().toLowerCase(), options: { emailRedirectTo: origin(), captchaToken: captcha.token } })
+    captcha.reset()
+    if (isCaptchaError(error?.message)) { setProblem(CAPTCHA_FAILED); return }
     if (rateLimited(error?.message)) { setProblem('Too many requests. Wait a minute, then try again.'); return }
     setUnconfirmed(false)
     setCodeFor(form.email.trim().toLowerCase())
@@ -172,6 +190,7 @@ export function Login() {
             <TextField label="Password" type="password" autoComplete="current-password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} error={errors.password} />
             <Link to="/forgot-password" className="link self-end text-sm font-bold">Forgot password?</Link>
           </div>
+          {captcha.widget}
           {problem ? <Notice tone="error">{problem}</Notice> : null}
           {unconfirmed ? <button type="button" className="link self-start font-bold" onClick={resendConfirmation}>Send me a new confirmation code</button> : null}
           <button type="submit" className="btn w-full py-4" disabled={busy || !supabaseConfigured}>{busy ? 'Signing in…' : 'Sign in'}</button>
@@ -192,6 +211,7 @@ export function SignUp() {
   const [busy, setBusy] = useState(false)
   const [codeFor, setCodeFor] = useState<string | null>(null)
   const [bait, setBait] = useState('')
+  const captcha = useCaptcha()
   useEffect(() => setTitle('Register'), [])
   const set = (k: keyof typeof form) => (v: string) => setForm({ ...form, [k]: v })
 
@@ -202,13 +222,16 @@ export function SignUp() {
     if (!parsed.success) { setErrors(fieldErrors<typeof form>(parsed.error)); return }
     setErrors({})
     if (bait) { setCodeFor(parsed.data.email); return }
+    if (!captcha.ready) { setProblem(CAPTCHA_WAIT); return }
     setBusy(true)
     const { data, error } = await db().auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
-      options: { emailRedirectTo: origin(), data: { fullName: parsed.data.fullName, phone: parsed.data.phone, hostel: parsed.data.hostel } },
+      options: { emailRedirectTo: origin(), captchaToken: captcha.token, data: { fullName: parsed.data.fullName, phone: parsed.data.phone, hostel: parsed.data.hostel } },
     })
     setBusy(false)
+    captcha.reset()
+    if (isCaptchaError(error?.message)) { setProblem(CAPTCHA_FAILED); return }
     if (rateLimited(error?.message)) { setProblem('Too many sign-ups from this network. Wait a minute, then try again.'); return }
     if (error && !/registered/i.test(error.message)) { setProblem(error.message); return }
     // With confirmation off, Supabase signs in straight away; otherwise ask for the emailed code.
@@ -231,6 +254,7 @@ export function SignUp() {
           <TextField label="Delivery address: hostel, office or room (optional)" value={form.hostel} onChange={set('hostel')} />
           <TextField label="Password" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} error={errors.password} />
           <TextField label="Type it again" type="password" autoComplete="new-password" value={form.confirmPassword} onChange={set('confirmPassword')} error={errors.confirmPassword} />
+          {captcha.widget}
           {problem ? <Notice tone="error">{problem}</Notice> : null}
           <button type="submit" className="btn w-full py-4" disabled={busy || !supabaseConfigured}>{busy ? 'Registering…' : 'Register'}</button>
           <p className="text-center text-muted">Already have an account? <Link to="/login" state={location.state} className="link font-bold">Sign in</Link></p>
@@ -246,14 +270,18 @@ export function ForgotPassword() {
   const [error, setError] = useState<string | null>(null)
   const [sentTo, setSentTo] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const captcha = useCaptcha()
   useEffect(() => setTitle('Forgot password'), [])
   async function submit(e: FormEvent) {
     e.preventDefault()
     const parsed = emailOnlySchema.safeParse({ email })
     if (!parsed.success) { setError(parsed.error.issues[0]!.message); return }
+    if (!captcha.ready) { setError(CAPTCHA_WAIT); return }
     setBusy(true); setError(null)
-    const { error } = await db().auth.resetPasswordForEmail(parsed.data.email, { redirectTo: `${origin()}/reset-password` })
+    const { error } = await db().auth.resetPasswordForEmail(parsed.data.email, { redirectTo: `${origin()}/reset-password`, captchaToken: captcha.token })
     setBusy(false)
+    captcha.reset()
+    if (isCaptchaError(error?.message)) { setError(CAPTCHA_FAILED); return }
     if (rateLimited(error?.message)) { setError('Too many requests. Wait a minute, then try again.'); return }
     setSentTo(parsed.data.email)
   }
@@ -268,6 +296,7 @@ export function ForgotPassword() {
       ) : (
         <form onSubmit={submit} noValidate className="mt-10 flex flex-col gap-7">
           <TextField label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} error={error ?? undefined} />
+          {captcha.widget}
           <button type="submit" className="btn w-full py-4" disabled={busy || !supabaseConfigured}>{busy ? 'Sending…' : 'Send reset link'}</button>
           <Link to="/login" className="link text-center font-bold">Back to sign in</Link>
         </form>
