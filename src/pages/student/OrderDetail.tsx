@@ -4,9 +4,9 @@ import { Link, useParams } from 'react-router-dom'
 import { ScooterDrawing } from '../../components/Drawings'
 import { Notice, StarPicker, TextArea, TextField } from '../../components/form'
 import { useLoad, useSettings } from '../../lib/data'
-import { dateTime, kes, minutesUntil, ORDER_STATUS_LABEL, paymentReason, PROGRESS, progressIndex, statusTone, timeOnly } from '../../lib/format'
+import { dateTime, kes, minutesUntil, ORDER_STATUS_LABEL, PROGRESS, progressIndex, statusTone, timeOnly } from '../../lib/format'
 import { setTitle } from '../../lib/site'
-import { callFunction, db, friendly, rpc, supabase } from '../../lib/supabase'
+import { callFunction, db, friendly, reportError, rpc, supabase } from '../../lib/supabase'
 import type { Order, OrderStatus, Payment } from '../../lib/types'
 import { Stroke } from '../../components/Stroke'
 import { OrderSteps } from '../../components/OrderSteps'
@@ -64,7 +64,7 @@ export function OrderDetail() {
         <h1 className="sr-only">{order.reference}</h1>
         <p className={`text-xl font-extrabold ${statusTone(order.status)}`}>{ORDER_STATUS_LABEL[order.status]}</p>
       </div>
-      {UNPAID.includes(order.status) ? <PayNow order={order} payments={data.payments} onChange={reload} draftMinutes={settings.draftLifetimeMinutes} /> : null}
+      {UNPAID.includes(order.status) ? <PayNow order={order} onChange={reload} draftMinutes={settings.draftLifetimeMinutes} /> : null}
 
       {step >= 0 ? (
         <section className="mt-12" aria-label="Progress">
@@ -124,11 +124,10 @@ export function OrderDetail() {
   )
 }
 
-function PayNow({ order, payments, onChange, draftMinutes }: { order: Order; payments: Payment[]; onChange: () => void; draftMinutes: number }) {
+function PayNow({ order, onChange, draftMinutes }: { order: Order; onChange: () => void; draftMinutes: number }) {
   const [phone, setPhone] = useState(order.contactPhone.replace('+254', '0'))
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ tone: 'error' | 'success' | 'info'; text: string } | null>(null)
-  const last = payments[0]
   async function pay(e: FormEvent) {
     e.preventDefault()
     const parsed = payPhoneSchema.safeParse({ phone })
@@ -140,7 +139,8 @@ function PayNow({ order, payments, onChange, draftMinutes }: { order: Order; pay
       setMessage({ tone: 'success', text: r.message })
       onChange()
     } catch (err) {
-      setMessage({ tone: 'error', text: friendly(err) })
+      reportError('mpesa-stk-push', err instanceof Error ? err.message : String(err))
+      setMessage({ tone: 'info', text: 'No prompt on your phone yet? Check the number, wait a moment, then tap Pay now again.' })
     } finally {
       setBusy(false)
     }
@@ -159,7 +159,6 @@ function PayNow({ order, payments, onChange, draftMinutes }: { order: Order; pay
             ? 'A prompt was sent to your phone. Enter your PIN there; this page updates by itself.'
             : `The money goes straight to ${order.vendors?.name ?? 'the hotel'}. Unpaid orders are cleared after ${Math.round(draftMinutes / 60)} hours.`}
         </p>
-        {order.status === 'paymentFailed' && last ? <Notice tone="error">{paymentReason(last.resultDesc) ?? 'The payment did not go through.'} You can try again.</Notice> : null}
         <form onSubmit={pay} className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end">
           <TextField label="M-Pesa number" type="tel" inputMode="tel" value={phone} onChange={setPhone} className="sm:w-64" />
           <button type="submit" className="btn py-3" disabled={busy}>{busy ? 'Sending prompt…' : pending ? 'Send the prompt again' : 'Pay now'}</button>

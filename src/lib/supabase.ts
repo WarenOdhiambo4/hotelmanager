@@ -41,7 +41,14 @@ export function db(): SupabaseClient {
 
 /** Words that only make sense to a developer: setting names, database terms, code errors, addresses. */
 const TECHNICAL = /[A-Z][A-Z0-9]+_[A-Z0-9_]+|\b[a-z]+_[a-z0-9_]+\b|is not set|not configured|violates|constraint|\bcolumn\b|\brelation\b|null value|syntax|duplicate key|PGRST|non-2xx|edge function|status code|\bHTTP\b|undefined|\bnull\b|TypeError|ReferenceError|SyntaxError|unexpected|\bJSON\b|\bstack\b|internal|exception|\bfunction\b|\bsql\b|\bfetch\b|ECONN|[{}<>]|https?:\/\/|supabase|daraja|passkey|\btoken\b|secret|api key|webhook|n8n/i
-export const SOMETHING_WRONG = 'Something went wrong on our side. Please try again in a minute.'
+export const SOMETHING_WRONG = 'Please try again in a moment.'
+
+/** Sends an error we hid from the page to the audit log (backend engineers read it there). Never throws. */
+export function reportError(where: string, message: string): void {
+  console.error('Campus Food error (hidden from the page):', where, message)
+  if (!supabase) return
+  void supabase.rpc('logClientError', { pWhere: where, pMessage: message }).then(() => undefined, () => undefined)
+}
 
 /**
  * Turns any error into a sentence a customer can act on. Our own database messages are already written for people
@@ -55,7 +62,7 @@ export function friendly(error: unknown): string {
   if (/too many|rate limit/i.test(msg)) return 'Too many tries. Wait a minute, then try again.'
   if (/duplicate|already exists|unique/i.test(msg)) return 'That already exists.'
   if (!msg || msg.length > 200 || TECHNICAL.test(msg)) {
-    if (msg) console.error('Campus Food error (hidden from the page):', msg)
+    if (msg) reportError(typeof window === 'undefined' ? 'app' : window.location.pathname, msg)
     return SOMETHING_WRONG
   }
   return msg

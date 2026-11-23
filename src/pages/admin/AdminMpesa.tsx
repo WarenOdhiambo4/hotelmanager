@@ -5,7 +5,7 @@ import { HeaderActions, Sheet } from '../../components/HeaderBar'
 import { Stat, Tile, Tiles, type Tone } from '../../components/Tiles'
 import { Notice, Select, TextField } from '../../components/form'
 import { useLoad } from '../../lib/data'
-import { dateTime, kes, paymentReason } from '../../lib/format'
+import { dateTime, kes } from '../../lib/format'
 import { setTitle } from '../../lib/site'
 import { db, friendly, rpc, supabase } from '../../lib/supabase'
 
@@ -71,7 +71,7 @@ export function AdminMpesa() {
           {data.fees.map((f) => (
             <Tile key={f.id} tone={FEE_TONE[f.status] ?? 'muted'} kicker={`${f.status} · ${f.method}`} title={hotelName(f.vendorId)} figure={kes(f.amount)} figureNote={dateTime(f.createdAt)}>
               <p className="text-xs">{f.mpesaReceipt ?? 'no code yet'}{f.accountReference ? ` · account ${f.accountReference}` : ''}{f.payerName ? ` · ${f.payerName}` : ''}</p>
-              {paymentReason(f.resultDesc) ? <p className="text-xs text-muted">{paymentReason(f.resultDesc)}</p> : null}
+              
               <div className="flex gap-4 text-xs font-bold">
                 {f.status === 'unmatched' ? <button type="button" className="link" onClick={() => setSheet({ kind: 'assign', fee: f })}>Give to a hotel</button> : null}
                 {f.status === 'paid' && f.mpesaReceipt ? <button type="button" className="link text-danger" onClick={() => setSheet({ kind: 'reverse', fee: f })}>Reverse</button> : null}
@@ -89,7 +89,7 @@ export function AdminMpesa() {
               figure={kes(p.amount)} figureNote={dateTime(p.createdAt)}>
               <p className="text-sm">{p.reason}</p>
               {p.mpesaReceipt ? <p className="text-xs">M-PESA {p.mpesaReceipt}</p> : null}
-              {paymentReason(p.resultDesc) ? <p className="text-xs text-muted">{paymentReason(p.resultDesc)}</p> : null}
+              
               {p.status === 'requested' ? (p.requestedBy === session?.user.id ? <p className="text-xs text-muted">Another finance person approves this.</p> : (
                 <div className="flex gap-4 text-xs font-bold">
                   <button type="button" className="link" onClick={() => act(() => db().from('mpesaPayouts').update({ status: 'approved' }).eq('id', p.id), `${p.reference} approved. n8n sends it now.`)}>Approve and send</button>

@@ -10,7 +10,7 @@ import { Facts, Initial, Stat, Tile, Tiles, orderTone, type Tone } from '../../c
 import { Checkbox, Notice, Stars, TextArea, TextField } from '../../components/form'
 import { useLoad, useSettings } from '../../lib/data'
 import type { SiteImage } from '../../lib/data'
-import { dateTime, daysAgoIso, kes, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, paymentReason, todayIso } from '../../lib/format'
+import { dateTime, daysAgoIso, kes, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, todayIso } from '../../lib/format'
 import { setTitle, youtubeId } from '../../lib/site'
 import { db, friendly, mediaUrl, rpc, supabase, uploadImage } from '../../lib/supabase'
 import type { DailySummaryRow, DeliveryZone, MenuItem, Offer, Order, OrderStatus, Payment, PaymentStatus, PlatformSettings, Refund, SiteVideo, Vendor } from '../../lib/types'
@@ -248,7 +248,7 @@ export function AdminOrderDetail() {
             {data.payments.map((p) => (
               <Tile key={p.id} tone={payTone(p.status)} kicker={PAYMENT_STATUS_LABEL[p.status]} title={p.mpesaReceiptNumber ?? 'No receipt'} figure={kes(p.amount)}>
                 <Facts items={[['Phone', p.phone], ['Pays to', p.transactionType === 'CustomerBuyGoodsOnline' ? 'Till' : 'Paybill'], ['Started', dateTime(p.initiatedAt)], ['Confirmed by', p.source ?? '—']]} />
-                {paymentReason(p.resultDesc) ? <p className="text-xs text-muted">{paymentReason(p.resultDesc)}</p> : null}
+                
               </Tile>
             ))}
           </Tiles>
@@ -364,7 +364,7 @@ export function AdminPayments() {
               title={p.orders?.reference ?? 'Order'} to={`/orders/${p.orderId}`} figure={kes(p.amount)}
               visual={<FoodImage path={p.vendors?.logoPath} name={p.vendors?.name ?? 'Hotel'} width={120} shape="circle" className="h-11 w-11" />}>
               <Facts items={[['Hotel', p.vendors?.name], ['Phone', p.phone], ['M-Pesa', p.mpesaReceiptNumber ?? '—'], ['When', dateTime(p.initiatedAt)]]} />
-              {p.status !== 'paid' && paymentReason(p.resultDesc) ? <p className="text-xs text-muted">{paymentReason(p.resultDesc)}</p> : null}
+              
             </Tile>
           ))}
         </Tiles>
@@ -1044,7 +1044,7 @@ export function AdminAudit() {
           {data.notes.map((n) => (
             <Tile key={n.id} tone={n.status === 'sent' ? 'ok' : n.status === 'failed' ? 'danger' : n.status === 'skipped' ? 'muted' : 'gold'} kicker={`${n.status} · ${n.channel}`} title={n.recipient} figure={n.template}>
               <p className="text-xs text-muted">{dateTime(n.createdAt)} · tries {n.attempts}{n.sentBy ? ` · by ${n.sentBy}` : ''}</p>
-              {n.lastError && n.status !== 'sent' ? <p className="text-xs text-danger">Could not be delivered to this recipient.</p> : null}
+              
             </Tile>
           ))}
         </Tiles>
