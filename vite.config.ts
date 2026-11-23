@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { homeHtml, legalHtml, privacyPolicy, termsOfService, type LegalSettings } from './src/lib/legal'
@@ -66,7 +66,8 @@ function legalPages(mode: string): Plugin {
     apply: 'build',
     configResolved(c) { outDir = resolve(c.root, c.build.outDir) },
     async writeBundle() {
-      if (mode === 'admin') return
+      // vercel.json rewrites every route to /app, so the admin portal needs the same app shell (plain copy, no public pages).
+      if (mode === 'admin') { copyFileSync(resolve(outDir, 'index.html'), resolve(outDir, 'app.html')); return }
       const env = loadEnv(mode, process.cwd(), 'VITE_')
       const settings: LegalSettings = { supportEmail: null, supportPhone: null, platformFee: 20, refundWindowMinutes: 5, draftLifetimeMinutes: 120 }
       try {
