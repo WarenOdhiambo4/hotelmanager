@@ -47,3 +47,13 @@ export function CartoonAvatar({ className = 'h-9 w-9' }: P) {
     </svg>
   )
 }
+
+/** Receipt with a down arrow: download or print the order receipt. */
+export function ReceiptIcon({ className = 'h-5 w-5' }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path d="M6 3h12v18l-2.5-1.6L13 21l-2.5-1.6L8 21l-2-1.3V3Z" {...stroke} />
+      <path d="M12 7v6m-2.5-2.5L12 13l2.5-2.5M9 16.5h6" {...stroke} />
+    </svg>
+  )
+}

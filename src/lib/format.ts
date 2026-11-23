@@ -36,7 +36,7 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   refundPending: 'Refund approved',
   partiallyRefunded: 'Partly refunded',
   refunded: 'Refunded',
-  paymentFailed: 'Payment did not go through',
+  paymentFailed: 'Not paid yet',
 }
 
 export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
@@ -57,6 +57,6 @@ export function progressIndex(status: OrderStatus): number {
 }
 
 export const statusTone = (s: OrderStatus) =>
-  ['rejected', 'cancelled', 'paymentFailed'].includes(s) ? 'text-danger'
+  ['rejected', 'cancelled'].includes(s) ? 'text-danger'
     : ['delivered', 'refunded'].includes(s) ? 'text-ok'
       : ['paid', 'cancellationRequested'].includes(s) ? 'text-brand' : 'text-ink'
