@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
-import { legalHtml, privacyPolicy, termsOfService, type LegalSettings } from './src/lib/legal'
+import { homeHtml, legalHtml, privacyPolicy, termsOfService, type LegalSettings } from './src/lib/legal'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -54,7 +54,7 @@ function searchEngines(mode: string): Plugin {
 }
 
 /**
- * Legal pages as real HTML: Google's OAuth verification (and other crawlers) read /privacy and /terms without running
+ * Home, privacy and terms as real HTML: Google's OAuth verification (and other crawlers) read the home page, /privacy and /terms without running
  * JavaScript, so the site build writes privacy.html and terms.html: the normal app page with the full text already
  * inside #root (the app replaces it on start). The fee, refund window and contact come from the live settings at
  * build time, falling back to the defaults if Supabase cannot be reached.
@@ -78,6 +78,11 @@ function legalPages(mode: string): Plugin {
         }
       } catch { /* offline build: keep the defaults */ }
       const shell = readFileSync(resolve(outDir, 'index.html'), 'utf8')
+      // Every other route gets the empty app shell (vercel.json rewrites to /app); the home page carries readable text.
+      writeFileSync(resolve(outDir, 'app.html'), shell)
+      const home = shell.replace('<div id="root"></div>', `<div id="root">${homeHtml(settings)}</div>`)
+      if (home === shell) throw new Error('legal pages: could not place the home text in index.html')
+      writeFileSync(resolve(outDir, 'index.html'), home)
       for (const [file, path, doc] of [['privacy.html', '/privacy', privacyPolicy(settings)], ['terms.html', '/terms', termsOfService(settings)]] as const) {
         const title = `${doc.title} · Campus Food`
         const page = shell

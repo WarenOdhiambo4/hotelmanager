@@ -21,7 +21,7 @@ describe('setTitle (search metadata)', () => {
   it('indexes public pages with their own description', () => {
     window.history.replaceState(null, '', '/menu')
     setTitle('Today’s Menu', 'Menu description')
-    expect(document.title).toBe('Today’s Menu · Campus Food Kisii')
+    expect(document.title).toBe('Today’s Menu · Campus Food')
     expect(description()).toBe('Menu description')
     expect(robots()).toContain('index')
     expect(canonical()).toMatch(/\/menu$/)

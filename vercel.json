@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/app"
     }
   ],
   "headers": [
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "source": "/(index.html)?",
+      "source": "/(index.html|app|app.html|privacy|privacy.html|terms|terms.html)?",
       "headers": [
         {
           "key": "Cache-Control",

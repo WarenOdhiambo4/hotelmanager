@@ -229,3 +229,30 @@ export function legalHtml(doc: LegalDoc): string {
   ].join('')).join('\n')
   return `<main style="max-width:48rem;margin:0 auto;padding:2rem 1rem;font-family:system-ui,sans-serif;line-height:1.6"><p><a href="/">Campus Food</a></p><h1>${esc(doc.title)}</h1><p><em>Last updated ${esc(doc.updated)}</em></p><p>${html(doc.intro)}</p>\n${body}</main>`
 }
+
+/**
+ * The home page as plain HTML (inside #root of index.html, replaced by the app when it starts). It lets anyone,
+ * including Google's OAuth verification, read what Campus Food is, without signing in or running JavaScript, and links
+ * to the privacy policy and terms.
+ */
+export function homeHtml(s: LegalSettings): string {
+  const fee = Math.round(s.platformFee)
+  return `<main style="max-width:48rem;margin:0 auto;padding:2rem 1rem;font-family:system-ui,sans-serif;line-height:1.6">
+<p><img src="/brand/campus-food-mark.svg" alt="Campus Food logo" width="64" height="64" /></p>
+<h1>Campus Food</h1>
+<p><strong>Campus Food is a food-ordering and delivery app for Kisii University, Kenya.</strong> Students, staff and visitors order meals from verified hotels and student sellers near campus, pay the hotel directly by M-PESA, and follow the order until it is delivered to their hostel, office or gate.</p>
+<h2>What you can do with Campus Food</h2>
+<ul>
+<li>Browse the live menus of verified campus hotels, at each hotel’s own prices, without signing in.</li>
+<li>Order and pay through an M-PESA prompt on your phone; the money goes straight to the hotel’s Paybill or Till.</li>
+<li>Track your order as it is accepted, cooked, picked up and delivered, and get a receipt by SMS and email.</li>
+<li>Ask for a refund within ${s.refundWindowMinutes} minutes of paying, before the kitchen starts cooking.</li>
+<li>Talk to our receptionist by phone or WhatsApp for help with an order.</li>
+</ul>
+<p>Prices: food at the hotel’s menu price with no markup, a flat platform fee of KES ${fee} per order, and a delivery fee for your area, all shown before you pay.</p>
+<h2>Signing in, and how we use your Google data</h2>
+<p>You can browse without an account. To order, you sign in with your email address or with “Continue with Google”. If you use Google, Campus Food receives only your name, email address and profile picture. We use them only to create your account, sign you in, put your name on your orders and send your receipts. We never sell this data or use it for advertising. Full details are in our <a href="/privacy">privacy policy</a>.</p>
+<p><a href="/menu">Browse today’s menu</a> · <a href="/about">About Campus Food</a> · <a href="/contact">Contact us</a></p>
+<p><a href="/privacy">Privacy policy</a> · <a href="/terms">Terms of service</a></p>
+</main>`
+}

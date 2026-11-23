@@ -13,7 +13,7 @@ export const SITE = {
 }
 
 /** The home page title and the description used wherever a page gives none (also in index.html for crawlers). */
-export const HOME_TITLE = 'Campus Food Kisii · Verified Campus Hotels, Paid by M-PESA, Delivered to Your Hostel'
+export const HOME_TITLE = 'Campus Food · Order from Verified Kisii University Hotels, Pay by M-PESA, Delivered to Your Hostel'
 export const DEFAULT_DESCRIPTION =
   'Order from verified Kisii University hotels at their own menu prices. You pay the hotel directly by M-PESA, every order is tracked and receipted, and we deliver to your hostel.'
 
@@ -28,7 +28,7 @@ function meta(attr: 'name' | 'property', key: string, content: string) {
 
 /** Sets the tab title plus the search and social metadata for the current page. */
 export function setTitle(title?: string, description = DEFAULT_DESCRIPTION) {
-  const full = title ? `${title} · ${SITE.name} Kisii` : HOME_TITLE
+  const full = title ? `${title} · ${SITE.name}` : HOME_TITLE
   document.title = full
   if (typeof window === 'undefined') return
   const path = window.location.pathname
