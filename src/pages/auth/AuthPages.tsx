@@ -8,7 +8,7 @@ import { CAPTCHA_FAILED, CAPTCHA_WAIT, isCaptchaError, useCaptcha } from '../../
 import { Logo } from '../../components/Logo'
 import { Bait, Notice, TextField } from '../../components/form'
 import { setTitle, SURFACE } from '../../lib/site'
-import { authProviderEnabled, db, supabase, supabaseConfigured } from '../../lib/supabase'
+import { authProviderEnabled, db, friendly, supabase, supabaseConfigured } from '../../lib/supabase'
 import {
   codeSchema, emailOnlySchema, fieldErrors, loginSchema, newPasswordSchema, signUpSchema, type FieldErrors,
 } from '../../lib/validation'
@@ -24,7 +24,7 @@ function AuthFrame({ title, note, children }: { title: string; note?: string; ch
       {/* The Campus Food logo, centred, opens every sign-in screen. */}
       <Link to="/" aria-label="Campus Food home" className="mx-auto"><Logo size="lg" /></Link>
       {note ? <p className="mt-4 text-center text-muted">{note}</p> : null}
-      {!supabaseConfigured ? <Notice tone="error">Sign-in is not connected yet (missing Supabase settings).</Notice> : null}
+      {!supabaseConfigured ? <Notice tone="error">Sign-in is unavailable right now. Please try again shortly.</Notice> : null}
       {children}
     </div>
   )
@@ -49,7 +49,7 @@ function GoogleButton({ next }: { next: string }) {
       provider: 'google',
       options: { redirectTo: `${origin()}${safe}`, queryParams: { prompt: 'select_account' } },
     })
-    if (error) { setBusy(false); setProblem(error.message) }
+    if (error) { setBusy(false); setProblem('Google sign-in could not start. Try again, or use your email.') }
   }
   return (
     <div className="flex flex-col gap-4">
@@ -85,7 +85,7 @@ function CodeStep({ email, type, onBack, onDone }: { email: string; type: 'signu
     setBusy(true); setError(null)
     const { error } = await db().auth.verifyOtp({ email, token: parsed.data.code, type })
     setBusy(false)
-    if (error) { setError(/expired|invalid/i.test(error.message) ? 'That code is wrong or has expired. Request a new one.' : error.message); return }
+    if (error) { setError(/expired|invalid/i.test(error.message) ? 'That code is wrong or has expired. Request a new one.' : friendly(error)); return }
     onDone()
   }
   async function resend() {
@@ -233,7 +233,7 @@ export function SignUp() {
     captcha.reset()
     if (isCaptchaError(error?.message)) { setProblem(CAPTCHA_FAILED); return }
     if (rateLimited(error?.message)) { setProblem('Too many sign-ups from this network. Wait a minute, then try again.'); return }
-    if (error && !/registered/i.test(error.message)) { setProblem(error.message); return }
+    if (error && !/registered/i.test(error.message)) { setProblem(friendly(error)); return }
     // With confirmation off, Supabase signs in straight away; otherwise ask for the emailed code.
     if (data?.session) { navigate('/menu', { replace: true }); return }
     setCodeFor(parsed.data.email)
@@ -334,7 +334,7 @@ export function ResetPassword() {
     setErrors({}); setBusy(true); setProblem(null)
     const { error } = await db().auth.updateUser({ password: parsed.data.password })
     setBusy(false)
-    if (error) { setProblem(/same|different/i.test(error.message) ? 'Choose a password you have not used before.' : error.message); return }
+    if (error) { setProblem(/same|different/i.test(error.message) ? 'Choose a password you have not used before.' : friendly(error)); return }
     navigate('/menu', { replace: true })
   }
   return (

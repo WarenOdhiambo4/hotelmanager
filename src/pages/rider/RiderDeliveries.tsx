@@ -5,7 +5,7 @@ import { Notice } from '../../components/form'
 import { useLoad } from '../../lib/data'
 import { kes, ORDER_STATUS_LABEL, timeOnly } from '../../lib/format'
 import { setTitle } from '../../lib/site'
-import { db, rpc, supabase } from '../../lib/supabase'
+import { db, friendly, rpc, supabase } from '../../lib/supabase'
 import type { Order } from '../../lib/types'
 
 /** Riders see only the orders assigned to them: pickup, destination, contact, and two buttons. */
@@ -29,7 +29,7 @@ export function RiderDeliveries() {
   }, [session, reload])
   const move = async (id: string, status: 'outForDelivery' | 'delivered') => {
     setProblem(null)
-    try { await rpc('updateOrderStatus', { pOrderId: id, pStatus: status }); reload() } catch (e) { setProblem((e as Error).message) }
+    try { await rpc('updateOrderStatus', { pOrderId: id, pStatus: status }); reload() } catch (e) { setProblem(friendly(e)) }
   }
   return (
     <div className="mx-auto max-w-3xl px-4 pb-16 pt-4 text-sm sm:px-6">

@@ -9,7 +9,7 @@ import { useCart } from '../../lib/cart'
 import { useOffers, usePublicMenu, useSettings, useSiteImages, useTestimonials, useVideos, type PublicMenu, type SiteImage } from '../../lib/data'
 import { dayMonth, kes, shortKes } from '../../lib/format'
 import { setTitle, youtubeId } from '../../lib/site'
-import { mediaUrl, rpc } from '../../lib/supabase'
+import { friendly, mediaUrl, rpc } from '../../lib/supabase'
 import type { MenuItem } from '../../lib/types'
 import { feedbackSchema, fieldErrors, type FieldErrors } from '../../lib/validation'
 import { HomeFinder } from '../../components/HomeFinder'
@@ -448,7 +448,7 @@ export function FeedbackSection({ menu, site }: { menu: PublicMenu; site: SiteIm
       await rpc('submitFeedback', { pOrderId: null, pRating: parsed.data.rating, pComment: parsed.data.comment, pDisplayName: parsed.data.displayName, pContactEmail: parsed.data.contactEmail || null })
       setState('sent')
     } catch (err) {
-      setProblem((err as Error).message)
+      setProblem(friendly(err))
       setState('idle')
     }
   }

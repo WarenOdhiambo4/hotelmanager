@@ -45,7 +45,7 @@ export function Account() {
       const r = await callFunction<{ message: string }>('phone-verify', { phone: form.phone || profile!.phone })
       setCodeSent(true)
       setVerifyMsg({ tone: 'success', text: r.message })
-    } catch (err) { setVerifyMsg({ tone: 'error', text: (err as Error).message }) }
+    } catch (err) { setVerifyMsg({ tone: 'error', text: friendly(err) }) }
   }
   async function confirm(e: FormEvent) {
     e.preventDefault()
@@ -55,7 +55,7 @@ export function Account() {
       await refresh()
       setCodeSent(false)
       setVerifyMsg({ tone: 'success', text: 'Phone number verified.' })
-    } catch (err) { setVerifyMsg({ tone: 'error', text: (err as Error).message }) }
+    } catch (err) { setVerifyMsg({ tone: 'error', text: friendly(err) }) }
   }
 
   return (

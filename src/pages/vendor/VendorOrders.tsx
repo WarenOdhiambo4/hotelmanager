@@ -4,7 +4,7 @@ import { Notice } from '../../components/form'
 import { useLoad } from '../../lib/data'
 import { kes, minutesUntil, ORDER_STATUS_LABEL, timeOnly } from '../../lib/format'
 import { setTitle } from '../../lib/site'
-import { db, rpc, supabase } from '../../lib/supabase'
+import { db, friendly, rpc, supabase } from '../../lib/supabase'
 import type { Order, OrderStatus } from '../../lib/types'
 import { useVendor } from './VendorLayout'
 import { useFeeBalance } from './VendorFees'
@@ -124,7 +124,7 @@ function OrderRow({ order, onChange }: { order: Order; onChange: () => void }) {
   const [problem, setProblem] = useState<string | null>(null)
   const act = useCallback(async (fn: () => Promise<unknown>) => {
     setBusy(true); setProblem(null)
-    try { await fn(); setMode('idle'); onChange() } catch (e) { setProblem((e as Error).message) } finally { setBusy(false) }
+    try { await fn(); setMode('idle'); onChange() } catch (e) { setProblem(friendly(e)) } finally { setBusy(false) }
   }, [onChange])
   const move = (status: OrderStatus, note?: string, prepMinutes?: number) =>
     act(() => rpc('updateOrderStatus', { pOrderId: order.id, pStatus: status, pNote: note ?? null, pPrepMinutes: prepMinutes ?? null }))

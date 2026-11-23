@@ -172,10 +172,10 @@ export function VendorStaff() {
   async function add(e: FormEvent) {
     e.preventDefault()
     setMsg(null)
-    try { await rpc('addVendorMember', { pVendorId: vendor!.id, pEmail: email, pMemberRole: role }); setEmail(''); setOpen(false); reload() } catch (err) { setMsg({ tone: 'error', text: (err as Error).message }) }
+    try { await rpc('addVendorMember', { pVendorId: vendor!.id, pEmail: email, pMemberRole: role }); setEmail(''); setOpen(false); reload() } catch (err) { setMsg({ tone: 'error', text: friendly(err) }) }
   }
   async function remove(userId: string) {
-    try { await rpc('removeVendorMember', { pVendorId: vendor!.id, pUserId: userId }); reload() } catch (err) { setMsg({ tone: 'error', text: (err as Error).message }) }
+    try { await rpc('removeVendorMember', { pVendorId: vendor!.id, pUserId: userId }); reload() } catch (err) { setMsg({ tone: 'error', text: friendly(err) }) }
   }
   return (
     <div className="mt-4">

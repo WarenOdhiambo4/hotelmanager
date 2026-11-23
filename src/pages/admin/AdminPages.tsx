@@ -10,7 +10,7 @@ import { Facts, Initial, Stat, Tile, Tiles, orderTone, type Tone } from '../../c
 import { Checkbox, Notice, Stars, TextArea, TextField } from '../../components/form'
 import { useLoad, useSettings } from '../../lib/data'
 import type { SiteImage } from '../../lib/data'
-import { dateTime, daysAgoIso, kes, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, todayIso } from '../../lib/format'
+import { dateTime, daysAgoIso, kes, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, paymentReason, todayIso } from '../../lib/format'
 import { setTitle, youtubeId } from '../../lib/site'
 import { db, friendly, mediaUrl, rpc, supabase, uploadImage } from '../../lib/supabase'
 import type { DailySummaryRow, DeliveryZone, MenuItem, Offer, Order, OrderStatus, Payment, PaymentStatus, PlatformSettings, Refund, SiteVideo, Vendor } from '../../lib/types'
@@ -199,7 +199,7 @@ export function AdminOrderDetail() {
   }, { order: null as (Omit<Order, 'vendors' | 'orderItems'> & { vendors: Vendor | null; orderItems: DetailItem[] }) | null, history: [] as HistoryRow[], payments: [] as Payment[], refunds: [] as Refund[] }, [id])
   const o = data.order
   if (!o) return <p className="text-muted">Loading…</p>
-  const cancel = async () => { try { await rpc('updateOrderStatus', { pOrderId: o.id, pStatus: 'cancelled', pNote: 'Cancelled by admin' }); reload() } catch (e) { setProblem((e as Error).message) } }
+  const cancel = async () => { try { await rpc('updateOrderStatus', { pOrderId: o.id, pStatus: 'cancelled', pNote: 'Cancelled by admin' }); reload() } catch (e) { setProblem(friendly(e)) } }
   return (
     <Page title={o.reference}>
       {problem ? <Notice tone="error">{problem}</Notice> : null}
@@ -248,7 +248,7 @@ export function AdminOrderDetail() {
             {data.payments.map((p) => (
               <Tile key={p.id} tone={payTone(p.status)} kicker={PAYMENT_STATUS_LABEL[p.status]} title={p.mpesaReceiptNumber ?? 'No receipt'} figure={kes(p.amount)}>
                 <Facts items={[['Phone', p.phone], ['Pays to', p.transactionType === 'CustomerBuyGoodsOnline' ? 'Till' : 'Paybill'], ['Started', dateTime(p.initiatedAt)], ['Confirmed by', p.source ?? '—']]} />
-                {p.resultDesc ? <p className="text-xs text-muted">{p.resultDesc}</p> : null}
+                {paymentReason(p.resultDesc) ? <p className="text-xs text-muted">{paymentReason(p.resultDesc)}</p> : null}
               </Tile>
             ))}
           </Tiles>
@@ -311,7 +311,7 @@ function RefundTile({ refund: r, onDone, onError }: { refund: Refund; onDone: ()
   const { profile } = useAuth()
   const canDecide = profile?.role === 'admin'
   const canComplete = profile?.role === 'admin' || profile?.role === 'finance'
-  const run = async (fn: () => Promise<unknown>) => { onError(null); try { await fn(); onDone() } catch (e) { onError((e as Error).message) } }
+  const run = async (fn: () => Promise<unknown>) => { onError(null); try { await fn(); onDone() } catch (e) { onError(friendly(e)) } }
   return (
     <Tile tone={r.status === 'approved' ? 'gold' : 'brand'} kicker={r.status === 'approved' ? 'Approved · reverse on M-Pesa' : 'Requested'} title={r.orders?.reference ?? 'Order'} to={`/orders/${r.orderId}`} figure={kes(r.amount)}
       visual={<CartoonAvatar className="h-11 w-11" />}>
@@ -364,7 +364,7 @@ export function AdminPayments() {
               title={p.orders?.reference ?? 'Order'} to={`/orders/${p.orderId}`} figure={kes(p.amount)}
               visual={<FoodImage path={p.vendors?.logoPath} name={p.vendors?.name ?? 'Hotel'} width={120} shape="circle" className="h-11 w-11" />}>
               <Facts items={[['Hotel', p.vendors?.name], ['Phone', p.phone], ['M-Pesa', p.mpesaReceiptNumber ?? '—'], ['When', dateTime(p.initiatedAt)]]} />
-              {p.status !== 'paid' && p.resultDesc ? <p className="text-xs text-muted">{p.resultDesc}</p> : null}
+              {p.status !== 'paid' && paymentReason(p.resultDesc) ? <p className="text-xs text-muted">{paymentReason(p.resultDesc)}</p> : null}
             </Tile>
           ))}
         </Tiles>
@@ -441,7 +441,7 @@ function BalanceTile({ balance: b, onDone }: { balance: Balance; onDone: () => v
   const [msg, setMsg] = useState<Msg>(null)
   async function record(e: FormEvent) {
     e.preventDefault(); setMsg(null)
-    try { await rpc('recordSettlement', { pVendorId: b.vendorId, pAmount: Number(amount), pMemo: memo }); setAmount(''); setMemo(''); setMsg({ tone: 'success', text: 'Settlement recorded.' }); onDone() } catch (err) { setMsg({ tone: 'error', text: (err as Error).message }) }
+    try { await rpc('recordSettlement', { pVendorId: b.vendorId, pAmount: Number(amount), pMemo: memo }); setAmount(''); setMemo(''); setMsg({ tone: 'success', text: 'Settlement recorded.' }); onDone() } catch (err) { setMsg({ tone: 'error', text: friendly(err) }) }
   }
   return (
     <Tile tone={Number(b.balance) > 0 ? 'brand' : 'ok'} kicker={Number(b.balance) > 0 ? 'Owes the platform' : 'Settled'} title={b.vendorName} figure={kes(b.balance)}
@@ -513,7 +513,7 @@ function RegisterHotelForm({ onDone, onClose }: { onDone: () => void; onClose: (
       if (logoPath || coverPath) await db().from('vendors').update({ ...(logoPath ? { logoPath } : {}), ...(coverPath ? { coverPath } : {}) }).eq('id', vendorId)
       setMsg({ tone: 'success', text: `${parsed.data.name} registered and offline. Verify its M-Pesa on its tile to put it live.` })
       setForm(blank); setManager(''); setLogo(null); setCover(null); onDone()
-    } catch (err) { setMsg({ tone: 'error', text: (err as Error).message }) }
+    } catch (err) { setMsg({ tone: 'error', text: friendly(err) }) }
   }
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6">
@@ -605,7 +605,7 @@ function HotelTile({ vendor: v, onChange }: { vendor: Vendor; onChange: () => vo
   const { data: team, reload: reloadTeam } = useLoad(() => rpc<{ userId: string; fullName: string; email: string; memberRole: string }[]>('vendorTeam', { pVendorId: v.id }), [], [v.id])
   const run = async (fn: () => Promise<unknown>, ok: string) => {
     setMsg(null)
-    try { await fn(); setMsg({ tone: 'success', text: ok }); onChange(); reloadKey(); reloadTeam() } catch (e) { setMsg({ tone: 'error', text: (e as Error).message }) }
+    try { await fn(); setMsg({ tone: 'success', text: ok }); onChange(); reloadKey(); reloadTeam() } catch (e) { setMsg({ tone: 'error', text: friendly(e) }) }
   }
   const tone: Tone = v.isActive ? 'ok' : v.mpesaVerified ? 'muted' : 'gold'
   const manager = team.find((m) => m.memberRole === 'manager')
@@ -706,7 +706,7 @@ export function AdminPeople() {
   }, [])
   async function save(e: FormEvent) {
     e.preventDefault(); setMsg(null)
-    try { await rpc('setUserRole', { pEmail: email, pRole: role }); setMsg({ tone: 'success', text: `${email} is now ${ROLE_LABEL[role]}.` }); setEmail(''); reload() } catch (err) { setMsg({ tone: 'error', text: (err as Error).message }) }
+    try { await rpc('setUserRole', { pEmail: email, pRole: role }); setMsg({ tone: 'success', text: `${email} is now ${ROLE_LABEL[role]}.` }); setEmail(''); reload() } catch (err) { setMsg({ tone: 'error', text: friendly(err) }) }
   }
   const shown = people.filter((p) => !filter || p.role === filter)
   const count = (r: string) => people.filter((p) => p.role === r).length
@@ -737,7 +737,7 @@ function PersonTile({ person: p, onChange }: { person: Person; onChange: () => v
   const [msg, setMsg] = useState<Msg>(null)
   const save = async () => {
     setMsg(null)
-    try { await rpc('setUserRole', { pEmail: p.email, pRole: role }); onChange() } catch (err) { setMsg({ tone: 'error', text: (err as Error).message }) }
+    try { await rpc('setUserRole', { pEmail: p.email, pRole: role }); onChange() } catch (err) { setMsg({ tone: 'error', text: friendly(err) }) }
   }
   return (
     <ProfileCard name={p.fullName || p.email} avatarPath={p.avatarPath} role={ROLE_LABEL[p.role] ?? p.role}
@@ -1044,7 +1044,7 @@ export function AdminAudit() {
           {data.notes.map((n) => (
             <Tile key={n.id} tone={n.status === 'sent' ? 'ok' : n.status === 'failed' ? 'danger' : n.status === 'skipped' ? 'muted' : 'gold'} kicker={`${n.status} · ${n.channel}`} title={n.recipient} figure={n.template}>
               <p className="text-xs text-muted">{dateTime(n.createdAt)} · tries {n.attempts}{n.sentBy ? ` · by ${n.sentBy}` : ''}</p>
-              {n.lastError ? <p className="text-xs text-danger">{n.lastError}</p> : null}
+              {n.lastError && n.status !== 'sent' ? <p className="text-xs text-danger">Could not be delivered to this recipient.</p> : null}
             </Tile>
           ))}
         </Tiles>

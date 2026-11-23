@@ -4,9 +4,9 @@ import { Link, useParams } from 'react-router-dom'
 import { ScooterDrawing } from '../../components/Drawings'
 import { Notice, StarPicker, TextArea, TextField } from '../../components/form'
 import { useLoad, useSettings } from '../../lib/data'
-import { dateTime, kes, minutesUntil, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, PROGRESS, progressIndex, statusTone, timeOnly } from '../../lib/format'
+import { dateTime, kes, minutesUntil, ORDER_STATUS_LABEL, paymentReason, PROGRESS, progressIndex, statusTone, timeOnly } from '../../lib/format'
 import { setTitle } from '../../lib/site'
-import { callFunction, db, rpc, supabase } from '../../lib/supabase'
+import { callFunction, db, friendly, rpc, supabase } from '../../lib/supabase'
 import type { Order, OrderStatus, Payment } from '../../lib/types'
 import { Stroke } from '../../components/Stroke'
 import { OrderSteps } from '../../components/OrderSteps'
@@ -140,13 +140,13 @@ function PayNow({ order, payments, onChange, draftMinutes }: { order: Order; pay
       setMessage({ tone: 'success', text: r.message })
       onChange()
     } catch (err) {
-      setMessage({ tone: 'error', text: (err as Error).message })
+      setMessage({ tone: 'error', text: friendly(err) })
     } finally {
       setBusy(false)
     }
   }
   async function cancel() {
-    try { await rpc('cancelUnpaidOrder', { pOrderId: order.id }); onChange() } catch (err) { setMessage({ tone: 'error', text: (err as Error).message }) }
+    try { await rpc('cancelUnpaidOrder', { pOrderId: order.id }); onChange() } catch (err) { setMessage({ tone: 'error', text: friendly(err) }) }
   }
   const pending = order.status === 'paymentPending'
   return (
@@ -159,7 +159,7 @@ function PayNow({ order, payments, onChange, draftMinutes }: { order: Order; pay
             ? 'A prompt was sent to your phone. Enter your PIN there; this page updates by itself.'
             : `The money goes straight to ${order.vendors?.name ?? 'the hotel'}. Unpaid orders are cleared after ${Math.round(draftMinutes / 60)} hours.`}
         </p>
-        {order.status === 'paymentFailed' && last ? <Notice tone="error">Last attempt: {PAYMENT_STATUS_LABEL[last.status]}{last.resultDesc ? ` (${last.resultDesc})` : ''}. You can try again.</Notice> : null}
+        {order.status === 'paymentFailed' && last ? <Notice tone="error">{paymentReason(last.resultDesc) ?? 'The payment did not go through.'} You can try again.</Notice> : null}
         <form onSubmit={pay} className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end">
           <TextField label="M-Pesa number" type="tel" inputMode="tel" value={phone} onChange={setPhone} className="sm:w-64" />
           <button type="submit" className="btn py-3" disabled={busy}>{busy ? 'Sending prompt…' : pending ? 'Send the prompt again' : 'Pay now'}</button>
@@ -178,7 +178,7 @@ function RefundRequest({ order, windowMinutes, onDone }: { order: Order; windowM
   async function send(e: FormEvent) {
     e.preventDefault()
     if (reason.trim().length < 3) { setProblem('Tell us why you need a refund'); return }
-    try { await rpc('requestRefund', { pOrderId: order.id, pReason: reason }); onDone() } catch (err) { setProblem((err as Error).message) }
+    try { await rpc('requestRefund', { pOrderId: order.id, pReason: reason }); onDone() } catch (err) { setProblem(friendly(err)) }
   }
   return (
     <section className="mt-16">
@@ -200,7 +200,7 @@ function RateOrder({ order }: { order: Order }) {
   async function send(e: FormEvent) {
     e.preventDefault()
     if (!rating) { setProblem('Choose a rating'); return }
-    try { await rpc('submitFeedback', { pOrderId: order.id, pRating: rating, pComment: comment, pDisplayName: null, pContactEmail: null }); setDone(true) } catch (err) { setProblem((err as Error).message) }
+    try { await rpc('submitFeedback', { pOrderId: order.id, pRating: rating, pComment: comment, pDisplayName: null, pContactEmail: null }); setDone(true) } catch (err) { setProblem(friendly(err)) }
   }
   return (
     <section className="mt-16">

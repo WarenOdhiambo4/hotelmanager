@@ -39,14 +39,26 @@ export function db(): SupabaseClient {
   return supabase
 }
 
-/** Turns a Postgres or network error into a sentence a student can act on. */
+/** Words that only make sense to a developer: setting names, database terms, code errors, addresses. */
+const TECHNICAL = /[A-Z][A-Z0-9]+_[A-Z0-9_]+|\b[a-z]+_[a-z0-9_]+\b|is not set|not configured|violates|constraint|\bcolumn\b|\brelation\b|null value|syntax|duplicate key|PGRST|non-2xx|edge function|status code|\bHTTP\b|undefined|\bnull\b|TypeError|ReferenceError|SyntaxError|unexpected|\bJSON\b|\bstack\b|internal|exception|\bfunction\b|\bsql\b|\bfetch\b|ECONN|[{}<>]|https?:\/\/|supabase|daraja|passkey|\btoken\b|secret|api key|webhook|n8n/i
+export const SOMETHING_WRONG = 'Something went wrong on our side. Please try again in a minute.'
+
+/**
+ * Turns any error into a sentence a customer can act on. Our own database messages are already written for people
+ * and pass through; anything technical is replaced with a plain sentence and logged to the console for us instead.
+ */
 export function friendly(error: unknown): string {
-  const msg = typeof error === 'object' && error && 'message' in error ? String((error as { message: unknown }).message) : String(error ?? '')
-  if (/Failed to fetch|NetworkError|network/i.test(msg)) return 'No connection. Check your data or Wi-Fi and try again.'
-  if (/JWT|session/i.test(msg)) return 'Your session has ended. Sign in again.'
-  if (/permission denied|row-level security/i.test(msg)) return 'You do not have access to that.'
-  if (/schema cache|does not exist/i.test(msg)) return 'Campus Food is being set up. Try again shortly.'
-  return msg.replace(/^.*?ERROR:\s*/, '') || 'Something went wrong. Try again.'
+  const msg = (typeof error === 'object' && error && 'message' in error ? String((error as { message: unknown }).message) : String(error ?? '')).replace(/^.*?ERROR:\s*/, '').trim()
+  if (/Failed to fetch|NetworkError|network|Load failed|timed? ?out/i.test(msg)) return 'No connection. Check your data or Wi-Fi and try again.'
+  if (/JWT|session|refresh token|not authenticated/i.test(msg)) return 'Your session has ended. Sign in again.'
+  if (/permission denied|row-level security|not allowed|forbidden/i.test(msg)) return 'You do not have access to that.'
+  if (/too many|rate limit/i.test(msg)) return 'Too many tries. Wait a minute, then try again.'
+  if (/duplicate|already exists|unique/i.test(msg)) return 'That already exists.'
+  if (!msg || msg.length > 200 || TECHNICAL.test(msg)) {
+    if (msg) console.error('Campus Food error (hidden from the page):', msg)
+    return SOMETHING_WRONG
+  }
+  return msg
 }
 
 /** Calls a Campus Food database function and throws a friendly message on failure. */

@@ -39,6 +39,19 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   paymentFailed: 'Payment did not go through',
 }
 
+/** Safaricom's reason for an M-Pesa result, in plain words; null when there is nothing useful to say. */
+export function paymentReason(desc?: string | null): string | null {
+  if (!desc) return null
+  const d = desc.toLowerCase()
+  if (/success|processed successfully|accepted/.test(d)) return null
+  if (/cancel/.test(d)) return 'The payment was cancelled on the phone.'
+  if (/insufficient|balance/.test(d)) return 'There was not enough money in M-Pesa.'
+  if (/initiator|wrong pin|invalid pin|\bpin\b/.test(d)) return 'The M-Pesa PIN was not accepted.'
+  if (/time ?out|timed out|no response|unable to lock|ds timeout/.test(d)) return 'The prompt timed out before a PIN was entered.'
+  if (/limit/.test(d)) return 'The amount is above the M-Pesa limit for this number.'
+  return 'The payment did not go through.'
+}
+
 export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
   initiated: 'Starting',
   pending: 'Waiting for PIN',

@@ -8,7 +8,7 @@ import { RailIcons, SideRail } from '../../components/SideRail'
 import { Logo } from '../../components/Logo'
 import { UserAvatar } from '../../components/UserAvatar'
 import { ThemePicker } from '../../components/ThemePicker'
-import { db } from '../../lib/supabase'
+import { db, friendly } from '../../lib/supabase'
 
 /**
  * Admin portal shell (deployed on its own subdomain). Lock 2 of 3: a Supabase TOTP check.
@@ -84,11 +84,11 @@ function MfaGate({ onDone }: { onDone: () => void }) {
       // Clear half-finished enrolments, then start a fresh one.
       for (const f of data?.all ?? []) if (f.status !== 'verified') await db().auth.mfa.unenroll({ factorId: f.id })
       const { data: en, error } = await db().auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Campus Food admin' })
-      if (error || !en) { setProblem(error?.message ?? 'Could not start MFA setup'); return }
+      if (error || !en) { setProblem(error ? friendly(error) : 'Could not start the authenticator setup. Reload to try again.'); return }
       setFactorId(en.id)
       setSecret(en.totp.secret)
       setQr(await QRCode.toDataURL(en.totp.uri, { margin: 1, width: 220 }))
-    })().catch((e) => setProblem(String(e?.message ?? e)))
+    })().catch((e) => setProblem(friendly(e)))
   }, [])
 
   async function verify(e: FormEvent) {

@@ -8,7 +8,7 @@ import { useCart } from '../../lib/cart'
 import { useLoad, useSettings, useZones } from '../../lib/data'
 import { kes } from '../../lib/format'
 import { setTitle, whatsappLink } from '../../lib/site'
-import { db, rpc } from '../../lib/supabase'
+import { db, friendly, rpc } from '../../lib/supabase'
 import { checkoutSchema, fieldErrors, type FieldErrors } from '../../lib/validation'
 import { MpesaMethod, OrderSteps } from '../../components/OrderSteps'
 
@@ -76,7 +76,7 @@ export function Cart() {
       navigate(`/orders/${placed.orderId}`, { state: { justPlaced: true } })
     } catch (err) {
       waWindow?.close()
-      setProblem((err as Error).message)
+      setProblem(friendly(err))
     } finally {
       setBusy(null)
     }

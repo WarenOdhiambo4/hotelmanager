@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { CloseIcon, PhoneIcon } from './Icons'
 import { useSettings } from '../lib/data'
-import { rpc } from '../lib/supabase'
+import { friendly, rpc } from '../lib/supabase'
 import { whatsappLink } from '../lib/site'
 import { callbackSchema } from '../lib/validation'
 
@@ -259,7 +259,7 @@ function CallbackForm() {
       const res = await rpc<{ message: string }>('requestCallback', { pName: '', pPhone: parsed.data.phone, pTopic: parsed.data.topic })
       setMsg({ ok: true, text: res.message }); setPhone(''); setTopic('')
     } catch (err) {
-      setMsg({ ok: false, text: (err as Error).message })
+      setMsg({ ok: false, text: friendly(err) })
     } finally { setBusy(false) }
   }
   if (msg?.ok) return <p className="font-bold" aria-live="polite">{msg.text}</p>

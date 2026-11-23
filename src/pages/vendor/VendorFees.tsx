@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Notice, TextField } from '../../components/form'
 import { Stat, Tiles } from '../../components/Tiles'
 import { useLoad, useSettings } from '../../lib/data'
-import { dateTime, kes } from '../../lib/format'
+import { dateTime, kes, paymentReason } from '../../lib/format'
 import { db, friendly, rpc, supabase } from '../../lib/supabase'
 import { useVendor } from './VendorLayout'
 import { feePaySchema, mpesaCodeSchema } from '../../lib/validation'
@@ -108,7 +108,7 @@ export function VendorFees() {
             <li key={r.id} className="flex flex-wrap justify-between gap-2 border-b border-line py-2 text-sm">
               <span>{dateTime(r.createdAt)} · {METHOD_WORDS[r.method]}{r.mpesaReceipt ? ` · ${r.mpesaReceipt}` : ''}</span>
               <span className={`font-bold ${r.status === 'paid' ? 'text-ok' : ['failed', 'cancelled'].includes(r.status) ? 'text-danger' : ''}`}>
-                {STATUS_WORDS[r.status] ?? r.status}{r.status === 'verifying' ? '' : ` · ${kes(r.amount)}`}{r.status === 'failed' && r.resultDesc ? ` (${r.resultDesc})` : ''}
+                {STATUS_WORDS[r.status] ?? r.status}{r.status === 'verifying' ? '' : ` · ${kes(r.amount)}`}{r.status === 'failed' && paymentReason(r.resultDesc) ? ` (${paymentReason(r.resultDesc)})` : ''}
               </span>
             </li>
           ))}
