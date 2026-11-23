@@ -48,17 +48,17 @@ export function Orders() {
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 20000); return () => clearInterval(t) }, [])
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pb-16 pt-6 text-sm sm:px-6">
+    <div className="menu-font px-4 pb-16 pt-4 text-[0.8rem] sm:px-8">
       <h1 className="sr-only">My orders</h1>
-      {loading && !data.orders.length ? <p className="mt-10 text-muted">Loading your orders…</p> : null}
+      {loading && !data.orders.length ? <p className="mt-6 text-muted">Loading your orders…</p> : null}
       {!loading && !data.orders.length ? (
-        <div className="mt-12 flex flex-col items-center text-center">
-          <PlateDrawing className="h-36 w-36 text-ink" />
-          <p className="mt-4 text-muted">No orders yet.</p>
-          <Link to="/menu" className="btn mt-6">Order something</Link>
+        <div className="mt-10 flex flex-col items-start">
+          <PlateDrawing className="h-24 w-24 text-ink" />
+          <p className="mt-3 text-muted">No orders yet.</p>
+          <Link to="/menu" className="btn mt-4 !px-3 !py-1.5 !text-xs">Order something</Link>
         </div>
       ) : null}
-      <div className="flex flex-col gap-8">
+      <div className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {data.orders.map((o) => (
           <OrderCard key={o.id} order={o} payment={data.paid[o.id]} rating={data.ratings[o.id]} refundWindow={settings.refundWindowMinutes} onChange={reload} />
         ))}
@@ -84,86 +84,68 @@ function OrderCard({ order, payment, rating, refundWindow, onChange }: {
     try { await rpc('cancelUnpaidOrder', { pOrderId: order.id }); onChange() } catch (e) { setMessage(friendly(e)) }
   }
 
+  const SMALL = 'btn !px-3 !py-1.5 !text-xs'
+  const GHOST = 'btn btn-ghost !px-3 !py-1.5 !text-xs'
   return (
-    <article className="overflow-hidden rounded-2xl border border-line">
+    <article className="rounded-xl bg-ink/[0.04] p-3 sm:p-4">
       {/* Reference, hotel, date, status and receipt */}
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
-        <div>
-          <p className="headline text-2xl leading-none">{order.reference}</p>
-          <p className="mt-1 text-muted">{order.vendors?.name} · {dateTime(order.createdAt)} · {count} item{count === 1 ? '' : 's'}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className={`rounded-full bg-ink/5 px-3 py-1 text-xs font-extrabold ${statusTone(order.status)}`}>{ORDER_STATUS_LABEL[order.status]}</span>
+      <header className="flex items-start justify-between gap-3">
+        <p className="leading-snug">
+          <span className="text-sm font-bold">{order.reference}</span>
+          <span className="text-muted"> · {order.vendors?.name} · {dateTime(order.createdAt)} · {count} item{count === 1 ? '' : 's'}</span>
+        </p>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={`text-xs ${statusTone(order.status)}`}>{ORDER_STATUS_LABEL[order.status]}</span>
           {order.paidAt ? (
             <a href={`/r/${order.receiptToken}`} target="_blank" rel="noopener" title="Download receipt" aria-label={`Download receipt for ${order.reference}`}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink transition-colors hover:border-brand hover:text-brand">
-              <ReceiptIcon className="h-5 w-5" />
+              className="flex h-7 w-7 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/10 hover:text-brand">
+              <ReceiptIcon className="h-4 w-4" />
             </a>
           ) : null}
         </div>
       </header>
 
       {/* Dishes */}
-      <ul className="divide-y divide-line px-5 sm:px-6">
+      <ul className="mt-2 flex flex-col gap-2">
         {items.map((i) => (
-          <li key={i.id} className="flex gap-4 py-4">
-            <FoodImage path={i.menuItems?.imagePath} name={i.itemName} width={160} className="h-16 w-16 shrink-0 sm:h-20 sm:w-20" />
-            <div className="min-w-0 flex-1">
-              <p className="font-extrabold">{i.itemName}</p>
-              {i.menuItems?.description ? <p className="mt-0.5 line-clamp-2 text-muted">{i.menuItems.description}</p> : null}
-              <p className="mt-1 text-muted">{i.quantity} × {kes(i.unitPrice)}</p>
+          <li key={i.id} className="flex items-center gap-3">
+            <FoodImage path={i.menuItems?.imagePath} name={i.itemName} width={96} className="h-10 w-10 shrink-0" />
+            <div className="min-w-0 flex-1 leading-tight">
+              <p className="truncate">{i.itemName} <span className="text-muted">· {i.quantity} × {kes(i.unitPrice)}</span></p>
+              {i.menuItems?.description && i.menuItems.description !== i.itemName ? <p className="truncate text-xs text-muted">{i.menuItems.description}</p> : null}
             </div>
-            <p className="shrink-0 font-extrabold">{kes(i.lineTotal)}</p>
+            <p className="shrink-0">{kes(i.lineTotal)}</p>
           </li>
         ))}
       </ul>
 
       {/* Money, payment and delivery */}
-      <div className="grid gap-6 border-t border-line px-5 py-5 sm:grid-cols-2 sm:px-6">
-        <dl className="flex flex-col gap-1">
-          <div className="flex justify-between"><dt className="text-muted">Food</dt><dd>{kes(order.foodSubtotal)}</dd></div>
-          <div className="flex justify-between"><dt className="text-muted">Delivery</dt><dd>{kes(order.deliveryFee)}</dd></div>
-          <div className="flex justify-between"><dt className="text-muted">Platform fee</dt><dd>{kes(order.platformFee)}</dd></div>
-          <div className="mt-1 flex justify-between border-t-2 border-ink pt-2 text-lg font-extrabold"><dt>Total</dt><dd>{kes(order.totalAmount)}</dd></div>
-          {Number(order.refundedAmount) > 0 ? <div className="flex justify-between text-ok"><dt>Refunded</dt><dd>{kes(order.refundedAmount)}</dd></div> : null}
-        </dl>
-        <div className="flex flex-col gap-3">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Payment</p>
-            {payment ? (
-              <p className="mt-1">M-Pesa{payment.mpesaReceiptNumber ? <> · <strong>{payment.mpesaReceiptNumber}</strong></> : null}<br />
-                <span className="text-muted">{kes(payment.amount)} from {payment.phone.replace(/^\+?254/, '0')} · {dateTime(payment.completedAt ?? order.paidAt)}</span></p>
-            ) : order.paidAt ? (
-              <p className="mt-1">Paid {dateTime(order.paidAt)}</p>
-            ) : (
-              <p className="mt-1 text-muted">Not paid yet. The money goes straight to {order.vendors?.name ?? 'the hotel'}.</p>
-            )}
-          </div>
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Delivery</p>
-            <p className="mt-1">{order.deliveryLocation}</p>
-            {order.deliveredAt ? <p className="text-muted">Delivered {dateTime(order.deliveredAt)}</p> : null}
-          </div>
-        </div>
+      <div className="mt-2 flex flex-col gap-0.5 text-xs text-muted">
+        <p>Food {kes(order.foodSubtotal)} · Delivery {kes(order.deliveryFee)} · Fee {kes(order.platformFee)} · <span className="text-sm font-bold text-ink">Total {kes(order.totalAmount)}</span>
+          {Number(order.refundedAmount) > 0 ? <span className="text-ok"> · Refunded {kes(order.refundedAmount)}</span> : null}</p>
+        <p>{payment
+          ? <>Paid by M-Pesa{payment.mpesaReceiptNumber ? <> <span className="text-ink">{payment.mpesaReceiptNumber}</span></> : null} · {payment.phone.replace(/^\+?254/, '0')} · {dateTime(payment.completedAt ?? order.paidAt)}</>
+          : order.paidAt ? <>Paid {dateTime(order.paidAt)}</> : <>Not paid yet · goes straight to {order.vendors?.name ?? 'the hotel'}</>}</p>
+        <p>To {order.deliveryLocation}{order.deliveredAt ? ` · delivered ${dateTime(order.deliveredAt)}` : ''}</p>
       </div>
 
       {/* What you can still do */}
-      <footer className="flex flex-wrap items-center gap-3 border-t border-line px-5 py-4 sm:px-6">
-        {unpaid ? <Link to={`/orders/${order.id}`} className="btn py-2.5">{order.status === 'paymentPending' ? 'Check payment' : 'Pay now'}</Link>
-          : <Link to={`/orders/${order.id}`} className="btn btn-ghost py-2.5">Track order</Link>}
-        {CANCELLABLE.includes(order.status) ? <button type="button" onClick={cancel} className="btn btn-ghost py-2.5">Cancel</button> : null}
+      <footer className="mt-3 flex flex-wrap items-center gap-2">
+        {unpaid ? <Link to={`/orders/${order.id}`} className={SMALL}>{order.status === 'paymentPending' ? 'Check payment' : 'Pay now'}</Link>
+          : <Link to={`/orders/${order.id}`} className={GHOST}>Track</Link>}
+        {CANCELLABLE.includes(order.status) ? <button type="button" onClick={cancel} className={GHOST}>Cancel</button> : null}
         {order.paidAt && ['paid', 'accepted', 'preparing'].includes(order.status) ? (
           <button type="button" disabled={!refundOpen} onClick={() => setPanel(panel === 'refund' ? null : 'refund')}
-            className="btn btn-ghost py-2.5 disabled:cursor-not-allowed disabled:opacity-40"
+            className={`${GHOST} disabled:cursor-not-allowed disabled:opacity-40`}
             title={refundOpen ? undefined : 'Refunds close once the kitchen starts cooking'}>
             {refundOpen ? `Refund · ${refundLeft} min left` : 'Refund closed'}
           </button>
         ) : null}
         {RATEABLE.includes(order.status) ? (
-          rating ? <span className="flex items-center gap-2 text-muted">Your rating <Stars n={rating} /></span>
-            : <button type="button" onClick={() => setPanel(panel === 'rate' ? null : 'rate')} className="btn btn-ghost py-2.5">Rate this order</button>
+          rating ? <span className="flex items-center gap-1 text-xs text-muted">Your rating <Stars n={rating} /></span>
+            : <button type="button" onClick={() => setPanel(panel === 'rate' ? null : 'rate')} className={GHOST}>Rate</button>
         ) : null}
-        {message ? <span className="text-muted">{message}</span> : null}
+        {message ? <span className="text-xs text-muted">{message}</span> : null}
       </footer>
 
       {panel === 'refund' && refundOpen ? <RefundForm order={order} onDone={() => { setPanel(null); onChange() }} /> : null}
@@ -183,9 +165,9 @@ function RefundForm({ order, onDone }: { order: FullOrder; onDone: () => void })
     try { await rpc('requestRefund', { pOrderId: order.id, pReason: reason }); onDone() } catch (err) { setHint(friendly(err)) } finally { setBusy(false) }
   }
   return (
-    <form onSubmit={send} className="flex flex-col gap-4 border-t border-line bg-ink/[0.03] px-5 py-5 sm:px-6">
+    <form onSubmit={send} className="mt-3 flex flex-col gap-3">
       <TextArea label="Why do you need a refund?" value={reason} onChange={setReason} rows={2} error={hint ?? undefined} />
-      <button type="submit" className="btn self-start" disabled={busy}>{busy ? 'Sending…' : 'Request refund'}</button>
+      <button type="submit" className="btn self-start !px-3 !py-1.5 !text-xs" disabled={busy}>{busy ? 'Sending…' : 'Request refund'}</button>
     </form>
   )
 }
@@ -203,11 +185,11 @@ function RateForm({ order, onDone }: { order: FullOrder; onDone: () => void }) {
     catch (err) { setHint(friendly(err)) } finally { setBusy(false) }
   }
   return (
-    <form onSubmit={send} className="flex flex-col gap-4 border-t border-line bg-ink/[0.03] px-5 py-5 sm:px-6">
+    <form onSubmit={send} className="mt-3 flex flex-col gap-3">
       <StarPicker value={rating} onChange={setRating} />
       <TextArea label="Anything to tell the kitchen? (optional)" value={comment} onChange={setComment} rows={2} />
       {hint ? <Notice>{hint}</Notice> : null}
-      <button type="submit" className="btn self-start" disabled={busy}>{busy ? 'Sending…' : 'Send rating'}</button>
+      <button type="submit" className="btn self-start !px-3 !py-1.5 !text-xs" disabled={busy}>{busy ? 'Sending…' : 'Send rating'}</button>
     </form>
   )
 }
