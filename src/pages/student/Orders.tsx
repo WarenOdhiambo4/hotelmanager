@@ -49,17 +49,17 @@ export function Orders() {
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 20000); return () => clearInterval(t) }, [])
 
   return (
-    <div className="menu-font px-4 pb-16 pt-4 text-[0.8rem] sm:px-8">
+    <div className="px-4 pb-16 pt-4 text-sm sm:px-8">
       <h1 className="sr-only">My orders</h1>
-      {loading && !data.orders.length ? <p className="mt-6 text-muted">Loading your orders…</p> : null}
+      {loading && !data.orders.length ? <p className="mt-10 text-center text-muted">Loading your orders…</p> : null}
       {!loading && !data.orders.length ? (
-        <div className="mt-10 flex flex-col items-start">
-          <PlateDrawing className="h-24 w-24 text-ink" />
-          <p className="mt-3 text-muted">No orders yet.</p>
-          <Link to="/menu" className="btn mt-4 !px-3 !py-1.5 !text-xs">Order something</Link>
+        <div className="mx-auto mt-12 flex max-w-4xl flex-col items-center text-center">
+          <PlateDrawing className="h-36 w-36 text-ink" />
+          <p className="mt-4 text-muted">No orders yet.</p>
+          <Link to="/menu" className="btn mt-6">Order something</Link>
         </div>
       ) : null}
-      <div className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      <div className="menu-font grid items-start gap-3 text-[0.8rem] sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {data.orders.map((o) => (
           <OrderCard key={o.id} order={o} payment={data.paid[o.id]} rating={data.ratings[o.id]} refundWindow={settings.refundWindowMinutes} onChange={reload} />
         ))}
