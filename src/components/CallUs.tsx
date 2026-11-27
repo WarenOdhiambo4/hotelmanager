@@ -65,7 +65,7 @@ export function CallUs() {
   }, [open])
   if (/^\/(hotel|rider)(\/|$)/.test(pathname)) return null
   return (
-    <div ref={ref} className="fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
+    <div ref={ref} className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-40 sm:bottom-6 sm:right-6">
       {open ? (
         <div role="dialog" aria-label="Talk to Campus Food"
           className="drop-in absolute bottom-16 right-0 w-[min(19rem,calc(100vw-2rem))] rounded-2xl border border-line bg-canvas p-4 text-sm">

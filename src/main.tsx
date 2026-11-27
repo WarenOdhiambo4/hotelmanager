@@ -4,8 +4,10 @@ import { Analytics } from '@vercel/analytics/react'
 import App from './App'
 import './index.css'
 import { SURFACE } from './lib/site'
+import { startPwa } from './lib/pwa'
 
 if (SURFACE === 'admin') document.title = 'Campus Food · Admin'
+startPwa()
 
 // After a new deploy, an old tab may ask for code files that no longer exist; reload once.
 window.addEventListener('vite:preloadError', (event) => {

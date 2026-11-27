@@ -57,10 +57,17 @@
         ]
       }
     </script>
+    <!-- Installable app "Skool" (the admin build drops this block). -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="Skool" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Skool" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/app/skool-180.png" />
     <!--seo:end-->
     <meta name="theme-color" content="#d7263d" />
     <link rel="icon" type="image/svg+xml" href="/brand/campus-food-mark.svg" />
-    <link rel="apple-touch-icon" href="/brand/campus-food-mark.svg" />
     <!-- Speed: connect early to the image and API host; start the hero photo (the largest thing on the first screen) at once. -->
     <link rel="preconnect" href="https://owlnhsqeyzxdtpfphnyr.supabase.co" crossorigin />
     <link rel="preload" as="image" href="https://owlnhsqeyzxdtpfphnyr.supabase.co/storage/v1/object/public/media/site/hero/hero-food.webp" fetchpriority="high" />

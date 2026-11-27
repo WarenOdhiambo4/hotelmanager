@@ -2,7 +2,9 @@ import { Component, useEffect, type ReactNode } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useCart } from '../lib/cart'
 import { supabaseConfigured } from '../lib/supabase'
+import { hasTabBar, InstallPrompt, TabBar } from './AppBar'
 import { CallUs } from './CallUs'
+import { isStandalone } from '../lib/pwa'
 import { RevealFooter } from './RevealFooter'
 import { SiteHeader } from './SiteHeader'
 
@@ -56,6 +58,7 @@ function SetupBanner() {
 
 export function SiteLayout() {
   const { pathname } = useLocation()
+  const app = isStandalone()
   useEffect(() => { window.scrollTo({ top: 0 }) }, [pathname])
   return (
     <>
@@ -63,10 +66,13 @@ export function SiteLayout() {
       <SiteHeader />
       {/* Only the home page ends with the revealing footer (it needs an opaque page above it);
           every other screen, and everything after sign-in, stays on task with no footer. */}
-      <main className={`relative z-10 ${pathname === '/' ? 'page-backdrop' : 'min-h-[calc(100vh-4rem)]'}`}>
+      <main className={`relative z-10 ${pathname === '/' ? 'page-backdrop' : 'min-h-[calc(100vh-4rem)]'} ${hasTabBar(pathname) ? 'max-sm:pb-[calc(4.5rem+env(safe-area-inset-bottom))]' : ''}`}>
         <ErrorBoundary resetKey={pathname}><Outlet /></ErrorBoundary>
       </main>
-      {pathname === '/' ? <RevealFooter /> : null}
+      {/* The installed app (Skool) has no footer, like any phone app. */}
+      {pathname === '/' && !app ? <RevealFooter /> : null}
+      <TabBar />
+      <InstallPrompt />
       <CartConflict />
       <CallUs />
     </>
